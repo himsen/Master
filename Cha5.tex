@@ -1,0 +1,852 @@
+\chapter{Hardness Assumption Subversion}
+\chaplab{hardnessAssumptionSubversion}
+
+In this chapter we present strong (canonical) subversions of two different non-interactive cryptographic games that models two different, but related, hardness assumptions: $\CDH$ and $\DDH$. For each hardness assumption we define a non-interactive cryptographic game and prove that security of this cryptographic game is equivalent to the hardness assumption relative to a suitable generation algorithm. After the definition of the two non-interactive cryptographic game, we construct a big brother for each game and carefully prove that each big brother is a strong subversion.  
+
+The main idea used in this chapter is discussed in section \secref{mainIdea}\secref{computationalDiffieHellmanSubversion} defines an equivalent non-interactive cryptographic game for the $\CDH$ hardness assumption. \secref{decisionalDiffieHellmanSubversion} defines a non-interactive cryptographic game that is equivalent to the $\DDH$ hardness assumption. In each section, we also construct a big brother for each cryptographic game. In addition it is proven that each big brother is a strong subversion. The two subversions essentially use the same trick to enable a strong subversion and their proofs are very similar. This fact is elaborated upon in \secref{alternativeProof} where we prove that undetectability of the $\DDH$ subversion follows from undetectability of the $\CDH$ subversion. This relation is further explored in \chapref{publicKeyEncryptionSubversion} where we subvert the $\elGamal$ public-key encryption scheme whose security depends heavily on the hardness of the $\DDH$ game.  
+
+\section{Main Idea}
+\seclab{mainIdea}
+
+In this section, we present the main idea which is used in the next two sections. The technique is a subversion strategy that makes use of the Random Oracle Model and was first used by Young and Yung \cite{DBLP:conf/crypto/YoungY96}. 
+
+Consider the generation of two elements $g^a$ and $g^b$ in some cyclic group $\cgroup$ with order $q$ and generator $g$. $a$ and $b$ are uniform elements in $\Zq$. The insight of Young and Yung is that it is possible to change the generation of $g^a$ and $g^b$ in such a way that $b$ can be learned from the knowledge of $g^a$ and an $\elGamal$ key pair $(g^x,x)$ (the element $g^x$ is the public key and $x$ is the secret key chosen uniformly from $\Zq$). In an $\elGamal$ encryption the public key is used, together with an ephemeral key $y\unileft\Zq$, to scramble a message $m$ producing a ciphertext $c=(c_1,c_2)$ (see \defref{elGamal}). In relation with the generation of $g^a$ and $g^b$ it is possible to arrange the `encryption' such that $g^a = c_1 = c_2$ (note $a$ is used as ephemeral key) with $g^x$ being used as the public key i.e. there exists $\eta\in\cgroup$ such that $(g^x)^a\cdot \eta = g^a$: simply choose $\eta\defeq (g^x)^{-a}g^a$. Using a random oracle $\RO$ and the value $\eta$, we can generate $b$: $b\defeq \RO(\eta)$. In summary: given $g^x$ we do
+\begin{align*}
+	a\unileft\Zq;\quad \eta\defeq (g^x)^{-a}g^a;\quad b\defeq\RO(\eta);\quad \mbox{\Ret } (g^a,g^b).
+\end{align*}
+Since $g^a$ is the ciphertext of an $\elGamal$ encryption of the message $\eta$ it is possible to recover $\eta$ if $x$ is known! To see this we compute ($\elGamal$ decryption):
+\begin{align*}
+	(g^a)^{-x}g^a = (g^x)^{-a}g^a = \eta.
+\end{align*}
+From $\eta$ it is possible to compute $b$ as advertised. 
+
+\section{Computational Diffie Hellman Subversion}
+\seclab{computationalDiffieHellmanSubversion}
+
+The computational diffie hellman ($\CDH$) problem says that given two elements $g^x$ and $g^y$ from a cyclic group $\cgroup = \langle g \rangle$ of order $q$, it is hard to compute $g^{xy}$. $x$ and $y$ are uniform elements from $\Zq$. In \defref{CDH} we formally defined what it means for the $\CDH$ problem to be hard relative to a group-generation algorithm $\groupgen$. 
+
+In the following, we define a non-interactive cryptographic game $\cgame_{\CDH}$ ( \figref{CDH}) that models the $\CDH$ hardness game. In \thmref{CDHsecure} we prove that $\cgame_{\CDH}$ is secure when the $\CDH$ problem is hard relative to $\groupgen$. \thmref{CDHsubvert} proves that the big brother $\bb_{\CDH}$ defined in \figref{CDHsubvert}, strongly subverts $\cgame_{\CDH}$. 
+
+\begin{comment}
+\begin{thm}
+\thmlab{CDHsecure}
+Let $\groupgen$ be a polynomial-time algorithm that on input $1^n$, outputs a cyclic group $\cgroup$ of prime order $q$, $\vert q\vert = n$ and generator $g$. The non-interactive cryptographic game $\cgame_{\CDH}$ is secure (relative to $\groupgen$) when the $\CDH$ problem is hard relative to $\groupgen$. 
+\end{thm}
+\end{comment}
+
+\begin{thm}
+\thmlab{CDHsecure}
+Let $\groupgen(1^n)$ be defined as in \defref{CDH}. The non-interactive cryptographic game $\cgame_{\CDH}$ defined in \figref{CDH} is secure (relative to $\groupgen$) when the $\CDH$ problem is hard relative to $\groupgen$. 
+\end{thm}
+
+\begin{boxfigGame}{Non-interactive cryptographic game $\cgame_{\CDH}$.}{CDH}
+  \begin{description}
+ 	 \item[\underline{$\param(1^n)$}] ~ 
+  	
+		$(\cgroup,\order,\generator)\leftarrow\groupgen(1^n)$ \\
+		$\params \defeq (\cgroup,\order,\generator)$ \\
+		\Ret $\params$ 	
+		
+ 	\item[\underline{$\dev_{\CDH}(1^n,\params)$}] ~
+ 	
+ 		Parse: $\params = (\cgroup,\order,\generator)$ \\
+ 		$x,y\leftarrow_R\Zq$ \\
+ 		$h_1 \defeq g^{x}$ \\
+ 		$h_2 \defeq g^{y}$ \\
+ 		$\tau_p \defeq (\cgroup,\order,\generator,h_1,h_2)$ \\
+ 		$\tau_s \defeq (\cgroup,\order,\generator,g^{xy})$ \\
+ 		\Ret $(\tau_p,\tau_s)$
+
+	\item[\underline{$\pred(\ptrans,\strans,\sigma)$}] ~
+	
+		Parse: $\strans = (\cgroup,\order,\generator,g^{xy})$ \\
+		\Ret $\askequal{\sigma}{g^{xy}}$
+		
+	\item[\underline{$\left(p_0(n), \secf(n)\right) \defeq (0,1)$}]
+  \end{description}
+\end{boxfigGame}
+
+\begin{proof}
+Given a $\PPT$ adversary $\adve$. We construct another $\PPT$ adversary $\adve'$ such that
+\begin{align}
+\label{eq:CDHsecure1}
+	\adv_{\cgame_{\CDH}}^{\secgame}(\adve) = \adv_{\groupgen}^{\CDH}(\adve'),
+\end{align}
+where $\adv_{\groupgen}^{\CDH}(\adve')$ is the advantage of $\adve'$ in Game $\CDH_{\groupgen}^{\adve}(n)$ and $\adv_{\cgame_{\CDH}}^{\secgame}(\adve)$ is the advantage of $\adve$ in Game $\secgame_{\cgame_{\CDH}}^{\adve}(n)$. We first describe the attack by $\adve$ more concretely. \\
+
+\noindent\textbf{Game 0.} We write \defref{cgameAdvantage} more algorithmically in the context of $\adve$ being the adversary.
+
+\vspace*{-.3cm}
+\begin{Algorithm}[]{6cm}
+\captionGame
+\caption{0}
+\label{alg:CDHsecure1}
+\begin{algorithmic}[1]
+\State $(\cgroup,\order,\generator)\leftarrow\param(1^n)$  
+\State $x,y\leftarrow_R\Zq$; $h_1=g^x$; $h_2=g^y$
+\State $\hat{h}\leftarrow\adve(\cgroup,\order,\generator,h_1,h_2)$
+\end{algorithmic}
+\end{Algorithm}
+
+Let $S_0$ be the event that $\hat{h} = g^{xy}$ in Game 0. Obviously $\adv_{\cgame_{\CDH}}^{\secgame}(\adve)=\prob{S_0}$. We proceed by defining adversary $\adve'$, which tries to compute $g^{xy}$ using $\adve$ as a subroutine.
+
+\vspace*{-.3cm}
+\begin{Algorithm}[]{6cm}
+\captionAdversary
+\caption{$\adve'$}
+\label{alg:CDHsecure2}
+\begin{algorithmic}[1]
+\Require $(\cgroup,\order,\generator,h_1,h_2)$  
+\State $\hat{h}\leftarrow\adve(\cgroup,\order,\generator,h_1,h_2)$
+\State \Ret $\hat{h}$
+\end{algorithmic}
+\end{Algorithm}
+
+$\adve'$ is a $\PPT$ algorithm because $\adve$ is a $\PPT$ algorithm. When the input to $\adve'$ is of the form $(\cgroup,\order,\generator,g^x,g^y)$, computation proceed just as in Game 0. Hence
+\begin{align*}
+	\prob{x,y\leftarrow_R\Zq;\, \hat{h}\leftarrow\adve'(\cgroup,\order,\generator,g^x,g^y)\, :\, \hat{h}=g^{xy}}=\prob{S_0}.
+\end{align*}
+The left-hand side is exactly the advantage of $\adve'$ in Game $\CDH_{\groupgen}^{\adve}(n)$ and \ref{eq:CDHsecure1} follows.
+\end{proof}
+
+The above theorem is not surprising at all: the only difference between the game defining security of $\cgame_{\CDH}$ and the game defining $\CDH$ hardness is purely syntactical. Therefore the following remark is not surprising as well.
+
+\begin{rem}
+\remlab{gameEquivalentToCDH}
+Given the same generation algorithm $\groupgen$ as in \thmref{CDHsecure}. The $\CDH$ problem is hard relative to $\groupgen$ if the non-interactive cryptographic game $\cgame_{\CDH}$ is secure (relative to $\groupgen$). It is trivial to see that an adversary that can win Game $\CDH_{\groupgen}^{\adve}(n)$ with non-negligible probability, can also be used as an adversary in Game $\secgame_{\cgame_{\CDH}}^{\adve}(n)$ and win with the same non-negligible probability. 
+\end{rem} 
+
+\remref{gameEquivalentToCDH} shows that $\cgame_{\CDH}$ is just a reformulation of the $\CDH$ hardness assumption relative to a suitable group generation algorithm $\groupgen$. What we have gained is a convenient way of describing the hardness assumption with respect to subversion. In this context, \thmref{CDHsubvert} below shows that the $\CDH$ hardness assumption is completely susceptible to subversion attacks.
+\begin{thm}
+\thmlab{CDHsubvert}
+The big brother $\bb_{\CDH}$ defined in \figref{CDHsubvert} is a strong subversion of $\cgame_{\CDH}$ if the $\CDH$ problem is hard relative to $\groupgen$.
+\end{thm}
+
+\begin{boxfigGame}{Big brother subversion $\bb_{\CDH}$ of $\cgame_{\CDH}$.}{CDHsubvert}
+  \begin{description}
+ 	\item[\underline{$\bbgen(1^n,\params)$}] ~
+ 	
+ 		Parse: $\params = (\cgroup,\order,\generator)$ \\
+ 		$s\leftarrow_R \Zq$ \\
+ 		$h \defeq g^s$ \\
+ 		$\bbpk \defeq (\cgroup,\order,\generator,h)$ \\
+ 		$\bbsk \defeq (\cgroup,\order,\generator,s)$ \\
+ 		\Ret $(\bbpk,\bbsk)$
+
+	\item[\underline{$\bbdev_{\CDH}(1^n,\bbpk,\params)$}] ~
+		
+		Parse: $\params = (\cgroup,\order,\generator)$ \\
+		Parse: $\bbpk = (\cgroup,\order,\generator,h)$ \\
+		$x\unileft\Zq$ \\
+		$h_1 \defeq g^x$ \\
+		$\eta\defeq h^{-x}h_1$ \\
+		$y\defeq \RO(\eta)$ \\
+		$h_2 \defeq g^y$ \\ 		
+ 		$\tau_p \defeq (\cgroup,\order,\generator,h_1,h_2)$ \\
+ 		$\tau_s \defeq (\cgroup,\order,\generator,g^{xy})$ \\
+ 		\Ret $(\tau_p,\tau_s)$
+		
+	\item[\underline{$\bbrec(\bbsk,\params,\tau_p)$}] ~
+	
+		Parse: $\ptrans = (\cgroup,\order,\generator,h_1,h_2)$ \\
+		Parse: $\bbsk = (\cgroup,\order,\generator,s)$ \\
+		$\hat{\eta}\defeq h_1^{-s}h_1$ \\
+		$\hat{y} \defeq \RO(\hat{\eta})$ \\
+		\Ret $h_1^{\hat{y}}$
+  \end{description}
+  $\RO$ is a random oracle with domain and range $\Zq$.
+\end{boxfigGame}
+
+
+\begin{proof}
+We first prove that $\bb_{\CDH}$ is recoverable and thereafter we prove that $\bb_{\CDH}$ is strongly undetectable. Since $\cgame_{\CDH}$ is secure preservability of $\bb_{\CDH}$ follows from \propref{preservabilityRedundant}. The proof of recoverability is a straightforward symbol game, where one just has to check that the computation by $\bbrec$ is actually computing the correct values. The proof of strong undetectability is a little bit more intriguing and rely heavily on the assumption that the $\CDH$ problem is hard relative to $\groupgen$ and random oracle properties. \\
+
+\noindent\textbf{$\bb_{\CDH}$ is recoverable} 
+
+Because $\bbrec$ is only doing basic operations, it is a $\PPT$ algorithm. From the execution of $\bbgen$ we have $h=g^s$ in the cyclic group $\langle g\rangle = \mathbb{G}$ of order $q$. After executing $\bbdev_{\CDH}$ we have $h_1=g^x$ and $h_2=g^y$ where $y$ is computed by $\eta=h^{-x}h_1=h^{-x}g^x$ and then setting $y$ equal to $\RO(\eta)$. 
+
+When $\bb_{\CDH}$ executes $\bbrec$ with input $(\cgroup,\order,\generator,s,g^x,g^y)$, $\bbrec$ will first compute
+\begin{align*}
+	\hat{\eta} = h_1^{-s}h_1 = g^{-sx}g^x = (g^s)^{-x}g^x = h^{-x}g^x = \eta.
+\end{align*}
+By properties of the random oracle $\RO$, $\bbrec$ can then compute $\hat{y}=\RO(\hat{\eta}) = y$. Finally, $\bbrec$ outputs
+\begin{align*}
+	h_1^y = g^{xy}.
+\end{align*}
+$\bbrec$ will therefore always succeed. Hence 
+\begin{align*}
+	\adv_{\bb_{\CDH}}^{\recgame}(\bbrec) = 1.
+\end{align*} 
+
+\noindent\textbf{$\bb_{\CDH}$ is undetectable}
+
+Let $\user$ be a $\PPT$ user trying to distinguish between $\dev_{\CDH}$ and $\bbdev_{\CDH}$. Consider the game $\strongdetect{\dev_{\CDH}}{\bbdev_{\CDH}}{\user}$ and let $\oracle_{\CDH}$ be the oracle used in the game. We may WLOG assume that $\user$ makes exactly $t = t(n)$ queries to $\oracle_{\CDH}$ (if not, we can define a new adversary that makes exactly $t$ queries but ignores some of them). We first make some syntactical changes through Games 0-1. Both $\user$ and $\oracle_{\CDH}$ queries the same random oracle $\RO$, and so, the properties of a random oracle is consistent over the queries made from both $\user$ and $\oracle_{\CDH}$. Especially, if $\lambda$ has been queried to $\RO$, the same value will be returned if $\lambda$ is ever queried again, no matter whether $\user$ or $\oracle_{\CDH}$ executes the query. \\
+
+\noindent\textbf{Game 0:} We write Game $\strongdetect{\dev_{\CDH}}{\bbdev_{\CDH}}{\user}$ more algorithmically in the context of user $\user$ being the distinguisher. We leave out the description of the random oracle $\RO$, because we do not modify it going from Game 0 to Game 1. \begin{comment} We note that $\RO$ remembers the query from made by $\oracle_{\CDH}$ and therefore maintain consistency between the answers from $\oracle_{\CDH}$ and $\RO$. \end{comment}
+
+\vspace*{-.3cm}
+\begin{Algorithm}[]{6cm}
+\captionGame
+\caption{\textbf{0}}
+\label{alg:CDHgame1}
+\begin{algorithmic}[1]
+\State $(\cgroup,\order,\generator)\leftarrow\param(1^n)$
+\State $b\drawbit$
+\State $s\unileft\Zq$
+\State $h \defeq g^s$
+\State $\hat{b}\leftarrow\user^{\oracle_{\CDH},\RO}(\cgroup,\order,\generator,h)$
+\Statex\hrulefill
+\end{algorithmic}
+\begin{algorithmic}[1]
+\Statex \underline{Device oracle: \textbf{$\oracle_{\CDH}$} $i$'th query}
+\Statex
+\State $x_i\unileft\Zq$
+\State $h_{1,i} \defeq g^{x_i}$
+\If{$b = 0$}
+\State $y_i\unileft\Zq$
+\Else
+\State $\eta_i \defeq h^{-x_i}h_{1,i}$
+\State $y_i \defeq \RO(\eta_i)$
+\EndIf
+\State $h_{2,i} \defeq g^{y_i}$
+\State \Ret $(\cgroup,\order,\generator,h_{1,i},h_{2,i},g^{x_iy_i})$
+\end{algorithmic}
+\end{Algorithm}
+\begin{comment}
+\begin{algorithmic}[1]
+\Statex \underline{Random oracle: \textbf{$\RO(\lambda)$}}
+\Statex
+\State If $(\lambda,y)$ is in $Q_{\RO}$ for some $y$ \Ret $y$
+\State $y\unileft \Zq$
+\State Store $(\lambda,y)$ in $Q_{\RO}$
+\State \Ret $y$
+\end{algorithmic}
+\end{comment}
+
+Let $S_0$ denote the event $\hat{b} = b$ in Game 0. Then 
+\begin{align*}
+	\prob{S_0} = \prob{\true\leftarrow\strongdetect{\dev_{\CDH}}{\bbdev_{\CDH}}{\user}}.
+\end{align*} 
+We do a syntactic transformation into Game 1. \\
+
+\noindent\textbf{Game 1:} We reprogram the oracle $\oracle_{\CDH}$ such that $x_i$'s are computed in the beginning of the game. Knowing $x_i$ we also compute $h_{1,i}$ and $\eta_i$ in advance. Since we know that $\user$ will make exactly $t$ queries to $\oracle_{\CDH}$, we can sample a precise amount of elements. We remark that the sampling is performed using fresh randomness.
+
+%\vspace*{-.3cm}
+\begin{Algorithm}[]{6cm}
+\captionGame
+\caption{\textbf{1}}
+\label{alg:CDHgame2}
+\begin{algorithmic}[1]
+\State $(\cgroup,\order,\generator)\leftarrow\param(1^n)$
+\State $b\drawbit$
+\State $s\unileft\Zq$
+\State $h \defeq g^s$
+\State $x_1,x_2,\ldots,x_t\unileft\Zq$
+\State $h_{1,i} \defeq g^{x_i}$, for $i = 1, 2, \ldots, t$
+\State $\eta_i \defeq h^{x_i}h_{1,i}$, for $i = 1, 2, \ldots, t$
+\State $\hat{b}\leftarrow\user^{\oracle_{\CDH},\RO}(\cgroup,\order,\generator,h)$
+\Statex\hrulefill
+\end{algorithmic}
+\begin{algorithmic}[1]
+\Statex \underline{Device oracle: \textbf{$\oracle_{\CDH}$} $i$'th query}
+\Statex
+\If{$b = 0$}
+\State $y_i\unileft\Zq$
+\Else
+\State $y_i \defeq \RO(\eta_i)$
+\EndIf
+\State $h_{2,i} \defeq g^{y_i}$
+\State \Ret $(\cgroup,\order,\generator,h_{1,i},h_{2,i},g^{x_iy_i})$
+\end{algorithmic}
+\end{Algorithm}
+
+Let $S_1$ be the event that $\hat{b} = b$ in Game 1. Since the change is merely syntactic we have $\prob{S_1} = \prob{S_0}$. We find it easier to argue from the perspective of Game 1, than directly from Game 0. Additionally, it is now possible for the challenger to observe when one of the $\eta_i$'s is queried to the random oracle. In the execution of Game 1 we define two events:
+\begin{align*}
+	\query\quad &: \quad \mbox{The event that, at any point during its execution, $\user$ queries any of $\eta_1,\ldots,\eta_t$ to $\RO$.} \\
+	\success\quad &: \quad \mbox{The event that $\hat{b} = b$.} 
+\end{align*}
+
+Since $\success = \left(\success\pand\pneg{\query}\right)\por\left(\success\pand\query\right)$ and the two sets have empty intersection, we have
+\begin{align}
+	\prob{S_1} &= \prob{\success} \nonumber \\
+	&= \prob{\success\pand\pneg{\query}}+\prob{\success\pand\query} \nonumber \\
+	\label{eq:CDHsubvert3} & \leq \prob{\success\pand\pneg{\query}}+\prob{\query},
+\end{align}
+where all probabilities are taken over the randomness used in Game 1 (internal and explicit sampling). We now want to argue that
+\begin{align}
+	\label{eq:CDHsubvert1} \prob{\success\pand\pneg{\query}} &\leq \frac{1}{2}\quad\mbox{and} \\
+	\label{eq:CDHsubvert2} \prob{\query} &\leq \negl(n). 
+\end{align}
+Proving \ref{eq:CDHsubvert1} and \ref{eq:CDHsubvert2} together with \ref{eq:CDHsubvert3} clearly suffices to prove undetectability. We first deal with \ref{eq:CDHsubvert1}.
+
+If $\prob{\pneg{\query}} = 0$ then $\success\pand\pneg{\query} = \emptyset$ implying $\prob{\success\pand\pneg{\query}} = 0$. Assume $\prob{\pneg{\query}} \neq 0$. Then observe (valid identity when probability of event $\query$ is not 0)
+\begin{align*}
+	\prob{\success\pand\pneg{\query}} = \prob{\pneg{\query}}\cdot \condprob{\success}{\pneg{\query}} \leq \condprob{\success}{\pneg{\query}}
+\end{align*}
+We argue $\condprob{\success}{\pneg{\query}} = \frac{1}{2}$. When $\query$ does not occur, all $y_i$'s are uniformly random from the view of $\user$. Hence from the view of $\user$ the answers returned from the oracle $\oracle_{\CDH}$ has the exact same distribution no matter whether $b$ is 0 or 1. Phrased differently: $\user$ learns no information about $b$ even given $\user$'s view of the big brother public key $\bbpk$ and parameters $\params$: the big brother public key $\bbpk$ and $g^{x_i}$'s uniquely determine the $\eta_i$'s but since $\RO$ is a random function chosen independently of anything else, this gives no information on $\RO(\eta_i)$. The identity $\eta_i = h^{-x_i}h_{1,i}$ impose no extra restrictions since it is true independently of $b$ and there are no relations between $\eta_i$ and $y_i$ from the perspective of $\user$ when $\query$ does not occur. Similarly, $\user$'s queries to the random oracle $\RO$ reveals no information on $b$ since $\query$ does not occur. Therefore $\user$ can not do any better than random guessing, implying $\condprob{\success}{\pneg{\query}} = \frac{1}{2}$.
+
+The proof of the claim in (4.3) is more involved. Let $l = l(n)$ be the number of random oracle queries made by $\user$. Below we define a $\PPT$ adversary $\adve$ for the $\CDH$ problem relative to $\groupgen$. We will show that the advantage of $\adve$ in the $\CDH$ game is related to $\prob{\query}$.
+
+We first provide some intuition. Given an instance $(\cgroup,\order,\generator,g^x,g^s)$ of the $\CDH$ problem it is the goal of $\adve$ to compute $g^{sx}$. Since $\adve$ wants to use $\user$ as a subroutine, $\adve$ must simulate the input that $\user$ receives in the game $\strongdetect{\dev_{\CDH}}{\bbdev_{\CDH}}{\user}$. In our case, the value $g^{s}$ will play the role of the big brother public key, which means we don't know the associated big brother secret key. $\adve$ will run $\user$ as a subroutine answering $\user$'s queries to $\oracle_{\CDH}$ and $\RO$. Queries to $\RO$ are easy to answer since we can just return a (uniformly) random value. At a first note, queries to $\oracle_{\CDH}$ are also easy to answer: sample uniform $x_i$ and $y_i$ and output $(g^{x_i},g^{y_i},g^{x_iy_i})$ but letting the first query be answered with $(g^x,g^{y_1},(g^x)^{y_1})$ with $y_1$ uniform and $x_1 = x$. Because $\query$ occurs it is true for at least one $i$ that $\eta_i = h^{-x_i}g^{x_i}$. From this equation it is possible to compute $g^{sx_i}$ by
+\begin{align*}
+	g^{sx_i} = \eta_i^{-1}g^{x_i}.
+\end{align*}
+We face a problem though: if $i\neq 1$ we do not learn $g^{sx}$. To counter this we replace $g^{x_i}$ with $g^xg^{x_i}$ in each response, for all $i$. From $\eta_i$ we can recover $g^{sx}$ by computing
+\begin{align*}
+	g^{sx} = \eta_i^{-1}h^{-x_i}g^xg^{x_i},
+\end{align*}
+which are all known values to $\adve$. There is still one problem: when a $\eta_i$ is queried to $\RO$ we lose consistency between the queries to $\oracle_{\CDH}$ and $\RO$. If $\hat{y}$ is the answer from the query $\RO(\eta_i)$ then $\hat{y}$ is (with high probability) not the same $y$ that is used in the output from the $i$'th query to $\oracle_{\CDH}$. Concretely, in Game 1 there is a probability of 1 that consistency is preserved between queries while the probability of consistency, when $\user$ is used as a subroutine by $\adve$, is at most $\frac{1}{\vert\cgroup\vert}$ (when $\adve$ finish its execution). Since we do not know $s$ we can not even detect when such a query occurs\footnote{This can be fixed by assuming the stronger $\mathsf{GAP}$-$\CDH$ assumption. But we prefer the weaker $\CDH$ assumption.}. As an effect, the distribution of the answers, where we can not preserve consistency, will be different from the answers in game $\strongdetect{\dev_{\CDH}}{\bbdev_{\CDH}}{\user}$. On further thought, however, there is no problem. Consistency will be preserved up to the point where $\query$ occurs. But when $\query$ occurs we have a $\eta_i$ from which we can compute $g^{sx}$. What ever $\user$ answers afterwards, we can neglect since we are not interested in the probability of $\user$ succeeding in some game, but in the event $\query$. We give the details of $\adve$ below.
+
+%\vspace*{-.3cm}
+\begin{Algorithm}[]{6cm}
+\captionAdversary
+\caption{$\adve$}
+\label{alg:CDHadve1}
+\begin{algorithmic}[1]
+\Require $(\cgroup,\order,\generator,g^s,g^x)$ 
+\State Initialise list $L_{\RO}$
+\State $j\unileft\{1,2,\ldots,l\}$
+\State $z\unileft\{1,2,\ldots,t\}$
+\State $h \defeq g^s$
+\State $x_1,x_2,\ldots,x_t\unileft\Zq$
+\State $h_{1,i} \defeq g^xg^{x_i}$, for $i = 1, 2, \ldots, t$
+\State Run $\user^{\oracle_{\CDH},\RO}(\cgroup,q,g,h)$
+\State Parse: $L_{\RO}[j] = (\eta,y)$
+\State $\hat{h} \defeq \eta^{-1}h^{-x_z}h_{1,z}$
+\State \Ret $\hat{h}$
+\Statex\hrulefill
+\end{algorithmic}
+\begin{algorithmic}[1]
+\Statex \underline{Device oracle: \textbf{$\oracle_{\CDH}$} $i$'th query}
+\Statex
+\State $y_i\unileft\Zq$
+\State $h_{2,i} \defeq g^{y_i}$
+\State \Ret $(h_{1,i},h_{2,i},h_{1,i}^{y_i})$
+\end{algorithmic}
+\begin{algorithmic}[1]
+\Statex \underline{Random oracle: \textbf{$\RO(\lambda)$}}
+\Statex
+\If{$(\lambda,y)$ is in $L_{\RO}$ for some $y$}
+\State \Ret $y$
+\Else
+\State $y\unileft \Zq$
+\State Store $(\lambda,y)$ in $L_{\RO}$
+\State \Ret $y$
+\EndIf
+\end{algorithmic}
+\end{Algorithm}
+
+It is clear that $\adve$ is a $\PPT$ algorithm because $\user$ is. We prove that there exists a polynomial $f$ such that 
+\begin{align}
+\label{eq:CDHsubvertProve}
+	\adv_{\groupgen}^{\CDH}(\adve)\cdot f(n) \geq \prob{\query}.
+\end{align} 
+First observe that event $\query$ is still well-defined in the execution of $\adve$, even though $\adve$ can not detect it. We now compare the view of $\user$ until $\query$ occurs in the execution of Game 1 and the view of $\user$ when used as a subroutine by $\adve$. In each case, $(\cgroup,\order,\generator)$ is output by $\groupgen(1^n)$. In each case, $h$ is a uniform element because $s$ is chosen uniformly at random in the $\CDH$ game. In each case, queries to $\oracle_{\CDH}$ are answered with a tuple with the same distribution as long as $\query$ has not occurred (using same arguments as above). Finally, in each case, the queries to $\RO$ are answered with a uniform value from $\Zq$ (when $\query$ has not occurred). When $\RO$ is queried with a $\eta_i$, $\RO$ will answer with a uniform value independent of $g^{y_i}$ from the point of view of $\user$ when used as a subroutine in $\adve$ while the answer by $\RO$ in Game 1 uniquely determines $g^{y_i}$. But when this query is made, event $\query$ occurs and we can compute $g^{sx}$. Notice that when $\query$ occurs we can recover $g^{sx}$ with probability 1 if we guess the correct query among the $l$ queries and which $x_z$ is used among the $t$ possible values $x_1,x_2,\ldots,x_t$. Because then $\eta = h^{-(x+x_z)}g^{x+x_z}$ and $h_{1,z} = g^xg^{x_z}$, and $\adve$ computes
+\begin{align*}
+	\hat{h} = \eta^{-1}h^{-x_z}h_{1,z} = \left(g^{-x}g^{-x_z}h^{x}h^{x_z}\right) h^{-x_z}\left(g^xg^{x_z}\right) = h^x = g^{sx},
+\end{align*}
+which is the value $\adve$ answer with. 
+
+To win, $\adve$ must guess both in which query the event $\query$ occurs and which $x_i$ is used. Let $S$ be the event that the sampled pair $(z,j)$ in the execution of $\adve$ satisfy $\eta = h^{-(x+x_z)}g^{x+x_z}$ and occurs in the $j$'th query. Then
+\begin{align*}
+	\adv_{\groupgen}^{\CDH}(\adve) &= \prob{S\pand \query} \\
+	& = \prob{S}\cdot\prob{\query} \\
+	& \geq \frac{1}{l\cdot t}\prob{\query},
+\end{align*}
+since events $S$ and $\query$ are independent (and choices of $j$ and $z$ are also independent). Because the $\CDH$ problem is hard relative to $\groupgen$, $\adv_{\groupgen}^{\CDH}(\user)$ is negligible in $n$. Now since $l$ and $t$ are polynomials in $n$ the product $\adv_{\groupgen}^{\CDH}(\user)\cdot l\cdot t$ is thus also negligible in $n$. We conclude that $\prob{\query}$ is negligible in $n$ as we wanted to show.
+\end{proof}
+
+When proving undetectability in the proof of \thmref{CDHsubvert} we construct an adversary that can solve the $\CDH$ problem. We can increase the probability of the adversary winning, and thereby making the reduction more tight, if we assume the $\gapcdh$ problem is hard relative to $\groupgen$. The reduction would work just as above, except we will have the possibility of knowing when event $\query$ occurs and thereby making the guess of when it occurs, redundant. The proof goes exactly like the above proof with the addition of using the $\DDH$-oracle access provided by the $\gapcdh$ assumption in $\adve$ to check when $\query$ occurs. The upshot is the use of a stronger (and more artificial) assumption. 
+
+\section{Decisional Diffie-Hellman subversion}
+\seclab{decisionalDiffieHellmanSubversion}
+
+The decisional diffie hellman ($\DDH$) problem says that given two elements $g^x$ and $g^y$ from a cyclic $\cgroup = \langle g\rangle$ of order $q$, it is hard to distinguish between $g^{xy}$ and $g^z$, where $x,y,z\unileft\Zq$. A formal definition of $\DDH$ hardness is given in \defref{DDH}.
+
+There is a clear connection between the $\CDH$ problem and the $\DDH$ problem: if the $\CDH$ problem is easy then the $\DDH$ problem is also easy. Whether the converse is true is unknown. The former statement is proved in \propref{ddhImplyCdh} where we construct an algorithm that can solve the $\DDH$ problem using an algorithm that can solve the $\CDH$ problem. It turns out that there is a similar connection when we consider subversions of $\CDH$ and $\DDH$. Essentially the subversion of $\cgame_{\DDH}$ follows from the subversion of $\cgame_{\CDH}$ in the sense that the exact same subversion technique is used and indistinguishably of the subverted and non-subverted device only requires $\CDH$ hardness. This connection is elaborated upon in \secref{alternativeProof}.
+
+In \figref{DDH}, we define a non-interactive cryptographic game $\cgame_{\DDH}$ that models a $\DDH$ game. In \thmref{DDHsecure} we prove that $\cgame_{\DDH}$ is secure when the $\DDH$ problem is hard relative to $\groupgen$. \thmref{DDHsubvert} proves that the big brother $\bb_{\DDH}$ defined in \figref{DDHsubvert}, strongly subverts $\cgame_{\DDH}$. 
+
+We begin by constructing big brother and proving it is secure. 
+
+\begin{thm}
+\thmlab{DDHsecure}
+Let $\groupgen$ be defined as in \defref{DDH}. The non-interactive cryptographic game $\cgame_{\DDH}$ defined in \figref{DDH} is secure (relative to $\groupgen$) when the $\DDH$ problem is hard relative to $\groupgen$. 
+\end{thm}
+
+\begin{boxfigGame}{Non-interactive cryptographic game $\cgame_{\DDH}$.}{DDH}
+  \begin{description}
+  	\item[\underline{$\param(1^n)$}] ~ 
+  	
+		$(\cgroup,\order,\generator)\leftarrow\groupgen(1^n)$\\
+		$\params = (\cgroup,\order,\generator)$\\
+		\Ret $\params$ 	
+  	
+ 	\item[\underline{$\dev_{\DDH}(1^n,\params)$}] ~
+ 	
+ 		Parse: $\params=(\mathbb{G},q,g)$\\
+ 		$b\drawbit$ \\
+ 		$x,y,z\unileft\cgroup$ \\
+ 		$h_1 \defeq g^x$\\
+ 		$h_2 \defeq g^y$\\
+ 		$h_3 \defeq g^{xy+bz}$ \\
+ 		$\ptrans \defeq (\cgroup,\order,\generator,h_1,h_2,h_3)$ \\
+ 		$\strans \defeq (\cgroup,\order,\generator,b)$\\
+ 		\Ret $(\ptrans,\strans) $
+
+	\item[\underline{$\pred(\ptrans,\strans,\sigma)$}] ~
+	
+		Parse: $\strans = (\cgroup,\order,\generator,b)$\\
+		\Ret $\askequal{\sigma}{b}$
+		
+	\item[\underline{$(\basep(n),\secf(n)) \defeq \left(\frac{1}{2},2\right)$}]
+  \end{description}
+\end{boxfigGame}
+
+\begin{proof}
+Given a $\PPT$ adversary $\adve$, we construct a $\PPT$ adversary $\adve'$ such that
+\begin{align}
+\label{eq:DDHsecure1}
+	\adv_{\cgame_{\DDH}}^{\secgame}(\adve) = \adv_{\groupgen}^{\DDH}(\adve'),
+\end{align}
+where $\adv_{\groupgen}^{\DDH}(\adve')$ is the advantage of $\adve'$ in Game $\DDH_{\groupgen}^{\adve}(n)$ and $\adv_{\cgame_{\DDH}}^{\secgame}(\adve)$ is the advantage of $\adve$ in Game $\secgame_{\cgame_{\DDH}}^{\adve}(n)$. We first describe the attack by $\adve$ more concretely. \\
+
+\newpage
+\noindent\textbf{Game 0.} We write \defref{cgameAdvantage} more algorithmically in the context of $\adve$ being the adversary.
+
+\vspace*{-.3cm}
+\begin{Algorithm}[]{8cm}
+\captionGame
+\caption{0}
+\label{alg:DDHsecure2}
+\begin{algorithmic}[1]
+\State $(\cgroup,\order,\generator)\leftarrow\param(1^n)$  
+\State $b\drawbit$ 
+\State $x,y,z\leftarrow_R\Zq$; $h_1=g^x$; $h_2=g^y$; $h_3 = g^{xy+bz}$
+\State $\hat{b}\leftarrow\adve(\cgroup,\order,\generator,h_1,h_2,h_3)$
+\end{algorithmic}
+\end{Algorithm}
+
+Let $S_0$ be the event that $\hat{b} = b$ in Game 0. Obviously $\adv_{\cgame_{\DDH}}^{\secgame}(\adve)=\prob{S_0}$. We proceed by defining a new adversary $\adve'$, which tries to guess $b$ using $\adve$ as a subroutine.
+
+\vspace*{-.3cm}
+\begin{Algorithm}[]{6cm}
+\captionAdversary
+\caption{$\adve'$}
+\label{alg:DDHsecure3}
+\begin{algorithmic}[1]
+\Require $(\cgroup,\order,\generator,h_1,h_2,h_3)$ 
+\State $\hat{h}\leftarrow\adve(\cgroup,\order,\generator,h_1,h_2,h_3)$
+\State \Ret $\hat{h}$
+\end{algorithmic}
+\end{Algorithm}
+
+Since $\adve$ is a $\PPT$ algorithm $\adve'$ is also a $\PPT$ algorithm. When the input to $\adve'$ is of the form $(\cgroup,\order,\generator,g^x,g^y,g^{xy+bz})$, computation proceed just as in Game 0. Hence
+\begin{align*}
+	\prob{b\drawbit;\,x,y,z\leftarrow_R\Zq;\, \hat{b}\leftarrow\adve'(\cgroup,\order,\generator,g^x,g^y,g^{xy+bz})\, :\, \hat{b}=b}=\prob{S_0}.
+\end{align*}
+The left-hand side is exactly the advantage of $\adve'$ in Game $\DDH_{\groupgen}^{\adve'}(n)$ and equation \ref{eq:DDHsecure1} follows.
+\end{proof}
+
+Just as in \secref{computationalDiffieHellmanSubversion} security of the non-interactive cryptographic game $\cgame_{\DDH}$ is equivalent to the game $\DDH_{\groupgen}^{\adve}(n)$ defining $\DDH$ hardness. That is, given an adversary for the former game, this adversary succeed with the same probability in the security game for $\cgame_{\DDH}$. 
+
+We now state and prove that $\cgame_{\DDH}$ can be strongly subverted. As in the previous section this amounts to saying that the $\DDH$ hardness assumption can be subverted.
+
+\begin{thm}
+\thmlab{DDHsubvert}
+The big brother $\bb_{\DDH}$ defined in \figref{DDHsubvert} is a strong subversion of $\cgame_{\DDH}$ if the $\DDH$ problem is hard relative to $\groupgen$.
+\end{thm}
+
+\begin{boxfigGame}{Big brother subversion $\bb_{\DDH}$ of $\cgame_{\DDH}$.}{DDHsubvert}
+  \begin{description}
+ 	\item[\underline{$\bbgen(1^n,\params)$}] ~
+ 	
+ 		Parse: $\params = (\cgroup,\order,\generator)$ \\
+ 		$s\unileft\Zq$ \\
+ 		$h \defeq g^s$ \\
+ 		$\bbpk \defeq (\cgroup,\order,\generator,h)$ \\
+ 		 $\bbsk \defeq (\cgroup,\order,\generator,s)$ \\
+ 		\Ret $(\bbpk,\bbsk)$
+
+	\item[\underline{$\bbdev_{\DDH}(1^n,\bbpk,\params)$}] ~
+		
+		Parse: $\params = (\cgroup,\order,\generator)$ \\
+		Parse: $\bbpk = (\cgroup,\order,\generator,h)$ \\
+		$b\drawbit$ \\
+		$x,z\unileft\Zq$ \\
+		$h_1 \defeq g^x$ \\
+		$\eta \defeq h^{-x}h_1$ \\
+		$y\defeq \RO(\eta)$ \\
+		$h_2 \defeq g^y$ \\
+		$h_3 \defeq g^{xy+bz}$ \\ 		
+ 		$\ptrans \defeq (\cgroup,\order,\generator,h_1,h_2,h_3)$ \\
+ 		$\strans \defeq (\cgroup,\order,\generator,b)$\\
+ 		\Ret $(\ptrans,\strans)$
+		
+	\item[\underline{$\bbrec(\bbsk,\params,\ptrans)$}] ~
+	
+		Parse: $\ptrans = (\cgroup,\order,\generator,h_1,h_2,h_3)$\\
+		Parse: $\bbsk = (\cgroup,\order,\generator,s)$\\
+		$\hat{\eta}\defeq h_1^{-s}h_1$\\
+		$\hat{y} \defeq \RO(\eta)$\\
+		If $(h_1^{\hat{y}} = h_3)$: \Ret $0$\\
+		Else: \Ret $1$
+		
+  \end{description}
+  $\RO$ is a random oracle with domain and range $\Zq$.
+\end{boxfigGame}
+
+\begin{proof}
+We first prove that $\bb_{\DDH}$ is recoverable and afterwards that $\bb_{\DDH}$ is strongly undetectable. The first part is a straightforward symbol game, where one just has to check that the computation by $\bbrec$ is actually computing the correct values. The second part is following the same strategy as in \thmref{CDHsubvert} and actually only requires that the $\CDH$ problem is hard relative to $\groupgen$. \\
+
+\noindent\textbf{$\bb_{\DDH}$ is recoverable} 
+
+The operations done by $\bbrec$ clearly finish in polynomial-time implying that $\bbrec$ is a $\PPT$ algorithm. From the execution of $\bbgen$ we have $h=g^s$ in $\cgroup$. After executing $\bbdev_{\DDH}$ we have $h_1=g^x$, $h_2=g^y$ and $h_3 = g^{xy+bz}$ where $y$ is computed by $\eta=h^{-x}h_1=h^{-x}g^x$ and then setting $y$ equal to $\RO(\eta)$. 
+
+When $\bb_{\DDH}$ executes $\bbrec$ with input $(\cgroup,\order,\generator,s,g^x,g^y,g^{xy+bz})$, $\bbrec$ first computes
+\begin{align*}
+	\hat{\eta} = h_1^{-s}h_1 = g^{-sx}g^x = (g^s)^{-x}g^x = h^{-x}g^x = \eta.
+\end{align*}
+By properties of the random oracle $\RO$ we can compute $\hat{y}=\RO(\hat{\eta}) = y$. $\bbrec$ can then compute
+\begin{align*}
+	h_1^y = g^{xy}.
+\end{align*}
+Comparing this value against $h_3 = g^{xy+bz}$ determines the correct value of $b$ unless $z = 0$ in which case $\bbrec$ always guess $b = 0$. But since $z$ is uniform this happens with probability $\frac{1}{q}$ and hence is negligible (the length of $q$ is $n$). Therefore, we at least have
+\begin{align*}
+	\adv_{\bb_{\DDH}}(\bbrec) \geq \frac{1}{2},
+\end{align*} 
+which is sufficient to conclude that $\bb_{\DDH}$ recovers information. Asymptotically $\bbrec$ will be successful with an unnoticeable probability away from 1.\\
+
+\noindent\textbf{$\bb_{\CDH}$ is undetectable}
+
+Let $\user$ be a $\PPT$ user trying to distinguish between $\dev_{\DDH}$ and $\bbdev_{\DDH}$. Consider the game $\strongdetect{\dev_{\DDH}}{\bbdev_{\DDH}}{\user}$ and let $\oracle_{\DDH}$ be the oracle used in that game. Assume WLOG $\user$ makes exactly $t = t(n)$ queries to $\oracle_{\DDH}$. From Game 0 to Game 1 we make some syntactical changes. As before both $\user$ and $\oracle_{\DDH}$ have access to the same random oracle $\RO$. \\
+
+\noindent\textbf{Game 0:} We write Game $\strongdetect{\dev_{\DDH}}{\bbdev_{\DDH}}{\user}$ more algorithmically in the context of user $\user$ being the distinguisher. We leave out the description of the random oracle $\RO$, because we do not modify it going from Game 0 to Game 1. 
+
+\vspace*{-.3cm}
+\begin{Algorithm}[]{6cm}
+\captionGame
+\caption{\textbf{0}}
+\begin{algorithmic}[1]
+\State $(\cgroup,\order,\generator)\leftarrow\param(1^n)$
+\State $b\drawbit$
+\State $s\unileft\Zq$
+\State $h \defeq g^s$
+\State $\hat{b}\leftarrow\user^{\oracle_{\DDH},\RO}(\cgroup,\order,\generator,h)$
+\Statex\hrulefill
+\end{algorithmic}
+\begin{algorithmic}[1]
+\Statex \underline{Device oracle: \textbf{$\oracle_{\DDH}$} $i$'th query}
+\Statex
+\State $b_i\drawbit$
+\State $x_i,z_i\unileft\Zq$
+\State $h_{1,i} \defeq g^{x_i}$
+\If{$b_i = 0$}
+\State $y_i\unileft\Zq$
+\Else
+\State $\eta_i \defeq h^{-x}h_{1,i}$
+\State $y_i \defeq \RO(\eta_i)$
+\EndIf
+\State $h_{2,i} \defeq g^{y_i}$
+\State $h_{3,i} \defeq g^{x_iy_i+b_iz_i}$
+\State \Ret $(\cgroup,\order,\generator,h_{1,i},h_{2,i},h_{3,i},b_i)$
+\end{algorithmic}
+\end{Algorithm}
+\begin{comment}
+\begin{algorithmic}[1]
+\Statex \underline{Random oracle: \textbf{$\RO(\lambda)$}}
+\Statex
+\State If $(\lambda,y)$ is in $Q_{\RO}$ for some $y$ \Ret $y$
+\State $y\unileft \Zq$
+\State Store $(\lambda,y)$ in $Q_{\RO}$
+\State \Ret $y$
+\end{algorithmic}
+\end{comment}
+
+Let $S_0$ denote the event $\hat{b} = b$ in Game 0. Then 
+\begin{align*}
+	\prob{S_0} = \prob{\true\leftarrow\strongdetect{\dev_{\DDH}}{\bbdev_{\DDH}}{\user}}.
+\end{align*}
+We do a syntactic transform into Game 1. \\
+
+\noindent\textbf{Game 1:} We reprogram the oracle $\oracle_{\DDH}$ such that $b_i$'s, $x_i$'s and $z_i$'s are computed in the beginning of the game. Knowing $x_i$ we can also compute $h_{1,i}$ and $\eta_i$ in advance. Recall that $\user$ will make exactly $t$ queries and that we sample elements using fresh randomness.
+
+%\vspace*{-.3cm}
+\begin{Algorithm}[]{6cm}
+\captionGame
+\caption{\textbf{1}}
+\begin{algorithmic}[1]
+\State $(\cgroup,\order,\generator)\leftarrow\param(1^n)$
+\State $b\drawbit$
+\State $s\unileft\Zq$
+\State $h \defeq g^s$
+\State $x_1,x_2,\ldots,x_t\unileft\Zq$
+\State $z_1,z_2,\ldots,z_t\unileft\Zq$
+\State $b_1,b_2,\ldots,b_t\unileft\Zq$
+\State $h_{1,i} \defeq g^{x_i}$, for $i = 1, 2, \ldots, t$
+\State $\eta_i \defeq h^{x_i}h_{1,i}$, for $i = 1, 2, \ldots, t$
+\State $\hat{b}\leftarrow\user^{\oracle_{\CDH},\RO}(\cgroup,\order,\generator,h)$
+\Statex\hrulefill
+\end{algorithmic}
+\begin{algorithmic}[1]
+\Statex \underline{Device oracle: \textbf{$\oracle_{\DDH}$} $i$'th query}
+\Statex
+\If{$b = 0$}
+\State $y_i\unileft\Zq$
+\Else
+\State $y_i \defeq \RO(\eta_i)$
+\EndIf
+\State $h_{2,i} \defeq g^{y_i}$
+\State $h_{3,i} \defeq g^{x_iy_i+b_iz_i}$
+\State \Ret $(\cgroup,\order,\generator,h_{1,i},h_{2,i},h_{3,i},b_i)$
+\end{algorithmic}
+\end{Algorithm}
+
+Let $S_1$ be the event that $\hat{b} = b$ in Game 1. Since the change is merely syntactic we have $\prob{S_1} = \prob{S_0}$. In the execution of Game 1 we define two events:
+\begin{align*}
+	\query\quad &: \quad \mbox{The event that, at any point during its execution, $\user$ queries any of $\eta_1,\ldots,\eta_t$ to $\RO$.} \\
+	\success\quad &: \quad \mbox{The event that $\hat{b} = b$.} 
+\end{align*}
+
+As in the proof of \thmref{CDHsubvert} we have
+\begin{align}
+\label{eq:DDHsubvert3}
+	\prob{S_1} \leq \prob{\success\pand\pneg{\query}}+\prob{\query},
+\end{align}
+where all probabilities are taken over the randomness used in Game 1 (internal and explicit sampling). Again we want to argue
+\begin{align}
+	\label{eq:DDHsubvert1} \prob{\success\pand\pneg{\query}} &\leq \frac{1}{2}\quad\mbox{and} \\
+	\label{eq:DDHsubvert2} \prob{\query} &\leq \negl(n). 
+\end{align}
+Proving \ref{eq:DDHsubvert1} and \ref{eq:DDHsubvert2} together with \ref{eq:DDHsubvert3} proves undetectability. The arguments for the two inequalities above are almost identical to the arguments given in \thmref{CDHsubvert}. We go through a shortened version in this proof because the two arguments are so similar. After the proof of \thmref{DDHsubvert} we show an alternative way of proving undetectability that highlights the close connection between undetectability of $\bb_{\CDH}$ and undetectability of $\bb_{\DDH}$. 
+
+We start with \ref{eq:DDHsubvert1}. If $\prob{\pneg{\query}} = 0$ then $\prob{\success\pand\pneg{\query}} = 0$. Assume $\prob{\pneg{\query}} \neq 0$. Then observe
+\begin{align*}
+	\prob{\success\pand\pneg{\query}} \leq \condprob{\success}{\pneg{\query}}.
+\end{align*}
+We argue $\condprob{\success}{\pneg{\query}} = \frac{1}{2}$. $\user$ learns no information about $b$ even given $\user$'s view of the big brother public key $\bbpk$ and parameters $\params$: the big brother public key and $g^{x_i}$'s do uniquely determine the $\eta_i$'s but since $\RO$ is a random function chosen independently of anything else, this gives no information on $\RO(\eta_i)$ and $\params$ contain no more information than the big brother public key. The identity $\eta_i = h^{-x_i}h_{1,i}$ imposes no extra restrictions since it is true in both cases and there are no relations between $\eta_i$ and $y_i$ from the perspective of $\user$ when $\query$ does not occur. Similarly, $\user$'s queries to $\RO$ reveals no information on $b$ since $\query$ does not occur. Therefore $\user$ can not do any better than random guessing, implying $\condprob{\success}{\pneg{\query}} = \frac{1}{2}$.
+
+Let $l = l(n)$ be number of random oracle queries made by $\user$. Below we define a $\PPT$ adversary $\adve$ for the $\CDH$ problem relative to $\groupgen$ (yes, $\CDH$ problem and not $\DDH$ problem) using $\user$ as a subroutine. We are interested in showing that same as in \ref{eq:CDHsubvertProve}. We give the details of $\adve$ below.
+ 
+\vspace*{-.3cm}
+\begin{Algorithm}[]{6cm}
+\captionAdversary
+\caption{$\adve'$}
+\label{alg:CDHadve1}
+\begin{algorithmic}[1]
+\Require $(\cgroup,\order,\generator,g^s,g^x)$ 
+\State Initialise list $L_{\RO}$
+\State $j\unileft\{1,2,\ldots,l\}$
+\State $z\unileft\{1,2,\ldots,t\}$
+\State $h \defeq g^s$
+\State $x_1,x_2,\ldots,x_t\unileft\Zq$
+\State $z_1,z_2,\ldots,z_t\unileft\Zq$
+\State $b_1,b_2,\ldots,b_t\unileft\Zq$
+\State $h_{1,i} \defeq g^xg^{x_i}$
+\State Run $\adve^{\oracle_{\CDH},\RO}(\cgroup,q,g,h)$
+\State Parse: $L_{\RO}[j] = (\eta,y)$
+\State $\hat{h} \defeq \eta^{-1}h^{-x_z}h_{1,z}$
+\State \Ret $\hat{h}$
+\Statex\hrulefill
+\end{algorithmic}
+\begin{algorithmic}[1]
+\Statex \underline{Device oracle: \textbf{$\oracle_{\DDH}$}}
+\Statex
+\State $y_i\unileft\Zq$
+\State $h_{2,i} \defeq g^{y_i}$
+\State $h_{3,i} \defeq h_{1,i}\cdot g^{b_iz_i}$
+\State \Ret $(h_{1,i},h_{2,i},h_{3,i},b_i)$
+\end{algorithmic}
+\begin{algorithmic}[1]
+\Statex \underline{Random oracle: \textbf{$\RO(\lambda)$}}
+\Statex
+\If{$(\lambda,y)$ is in $L_{\RO}$ for some $y$}
+\State \Ret $y$
+\Else
+\State $y\unileft \Zq$
+\State Store $(\lambda,y)$ in $L_{\RO}$
+\State \Ret $y$
+\EndIf
+\end{algorithmic}
+\end{Algorithm}
+
+Since $\user$ is a $\PPT$ algorithm, $\adve$ will also be a $\PPT$ algorithm. First observe that event $\query$ is still well-defined in the execution of $\adve$, even though $\adve$ can not detect it. We now compare the views of $\user$ until $\query$ occurs in the execution of Game 1 and the view of $\user$ when used as a subroutine by $\adve$. In each case, $(\cgroup,\order,\generator)$ is output by $\groupgen(1^n)$. In each case, $h$ is a uniform element because $s$ is chosen uniformly at random in the $\CDH$ game. In each case, queries to $\oracle_{\DDH}$ are answered with a tuple with the same distribution as long as $\query$ has not occurred (using same arguments as above). Finally, in each case, the queries to $\RO$ are answered with a uniform value from $\Zq$ (when $\query$ has not occurred). When $\RO$ is queried with a $\eta_i$, $\RO$ will output a uniform value independent of $g^{y_i}$ from the view of $\user$ when used as a subroutine in $\adve$ while the output in Game 1, when $\RO$ is queried by $\eta_i$, uniquely determines $g^{y_i}$. But when this query occurs, event $\query$ occurs. 
+
+Let $S$ be the event that the sampled pair $(z,j)$ in $\adve$ satisfy: $\eta = h^{-(x+x_z)}g^{x+x_z}$ is queried to $\RO$ in the $j$'th query. Then
+\begin{align*}
+	\adv_{\groupgen}^{\CDH}(\adve) &= \prob{S\pand \query} \\
+	& = \prob{S}\cdot\prob{\query} \\
+	& \geq \frac{1}{l\cdot t}\prob{\query}.
+\end{align*}
+\propref{ddhImplyCdh} implies that the $\CDH$ problem is hard relative to $\groupgen$ because the $\DDH$ problem is assumed hard relative to $\groupgen$. Thus $\adv_{\groupgen}^{\CDH}(\adve)$ is negligible in $n$. Since $l$ and $t$ are polynomials in $n$, we conclude that $\prob{\query}$ is negligible in $n$. 
+\end{proof}
+
+In the above proof we did not use any properties of $\bb_{\CDH}$. In the next section we elaborate on the connection between $\bb_{\CDH}$ and $\bb_{\DDH}$. 
+
+\section{Alternative proof of undetectability of $\bb_{\DDH}$}
+\seclab{alternativeProof}
+
+The observant reader may have noticed the similarity between the proof of \thmref{CDHsubvert} and \thmref{DDHsubvert}. It turns out that strong undetectability can be proven solely by using strong undetectability of $\bb_{\CDH}$. 
+
+\begin{proof}
+
+Our strategy is to use undetectability of $\bb_{\CDH}$ to prove that detection of the subversion $\bb_{\DDH}$ is impossible. In the following we notate $\bb_{\CDH} = \left( \bbgen_{\CDH}, \bbdev_{\CDH}, \bbrec_{\CDH} \right)$ and $\bb_{\DDH} = \left( \bbgen_{\DDH}, \bbdev_{\DDH}, \bbrec_{\DDH} \right)$
+
+Let $\user_{\DDH}$ be a $\PPT$ user and consider the game $\strongdetect{\dev_{\DDH}}{\bbdev_{\DDH}}{\user_{\DDH}}$. We construct a user $\user_{\CDH}$ using $\user_{\DDH}$ as a subroutine that tries to distinguish between $\dev_{\CDH}$ and $\bbdev_{\CDH}$ in game $\strongdetect{\dev_{\CDH}}{\bbdev_{\CDH}}{\user_{\CDH}}$. 
+In the sequel we will argue that there exists a negligible function $\negl$ such that
+\begin{align}
+\label{eq:alternativeUndetect1}
+	\adv_{\dev_{\DDH},\bbdev_{\DDH}}^{\strongdetectplain}(\user_{\DDH}) = \adv_{\dev_{\CDH},\bbdev_{\CDH}}^{\strongdetectplain}(\user_{\CDH}) \leq \negl(n),
+\end{align}
+which proves what we want. That inequality in \ref{eq:alternativeUndetect1} follows because $\bb_{\CDH}$ is a strong subversion of $\cgame_{\CDH}$ proved in \thmref{CDHsubvert}. We are left with the task of proving the equality. The user $\user_{\CDH}$ is constructed below: in the description $\user_{\CDH}$ has access to a device oracle $\oracle_{\CDH}$ and random oracle $\RO_{\CDH}$. 
+
+The idea is pretty clear: in the role of $\user_{\CDH}$ we can easily mimic as the challenger in game $\strongdetect{\dev_{\DDH}}{\bbdev_{\DDH}}{\user_{\DDH}}$ and simulate the input to $\user_{\DDH}$. Note that it is imperative that $\bb_{\CDH}$ is a strong subversion such that we have access to the value $g^{xy}$. Implicitly we assume that $\bbgen_{\CDH}$ and $\bbgen_{\DDH}$ use the same algorithm $\groupgen$ to generate parameters. 
+
+\begin{Algorithm}[]{6cm}
+\captionUser
+\caption{$\user_{\CDH}$}
+\label{alg:DDHadve1}
+\begin{algorithmic}[1]
+\Require $(\bbpk,\params)$  
+\State $\hat{b}\leftarrow \user_{\DDH}^{\oracle_{\DDH},\RO_{\DDH}}(\bbpk,\cgroup,\order,\generator)$
+\State \Ret $\hat{b}$
+\Statex\hrulefill
+\end{algorithmic}
+\begin{algorithmic}[1]
+\Statex \underline{Device oracle: \textbf{$\oracle_{\DDH}$}}
+\Statex
+\State Query: $(\ptrans,\strans)\leftarrow \oracle_{\CDH}$
+\State Parse: $\ptrans = (\cgroup,\order,\generator,g^x,g^y)$
+\State Parse: $\strans = (\cgroup,\order,\generator,g^{xy})$
+\State $b'\drawbit$
+\State $z\unileft\Zq$
+\State $\ptrans' = (\cgroup,\order,\generator,g^x,g^y,g^{xy}\cdot g^{b'z})$
+\State $\strans' = (\cgroup,\order,\generator,b')$
+\State \Ret $(\ptrans',\strans')$
+\end{algorithmic}
+\begin{algorithmic}[1]
+\Statex \underline{Random oracle: \textbf{$\RO_{\DDH}(\lambda)$}}
+\Statex
+\State Query: $r\leftarrow \RO_{\CDH}(\lambda)$
+\State \Ret $r$
+\end{algorithmic}
+\end{Algorithm}
+
+Let $\success_{\CDH}$ be the event that $\user_{\CDH}$ guess the correct bit in $\strongdetect{\dev_{\CDH}}{\bbdev_{\CDH}}{\user_{\CDH}}$. Then 
+\begin{align*}
+	\prob{\success_{\CDH}} = \prob{\true\leftarrow\strongdetect{\dev_{\CDH}}{\bbdev_{\CDH}}{\user_{\CDH}}}.
+\end{align*}
+Obviously the event $\success_{\CDH}$ occurs if and only if the subroutine $\user_{\DDH}$ used by $\user_{\CDH}$ guess the correct bit, because $\user_{\CDH}$ directly use this bit as its guess. Hence, if $\success_{\DDH}$ is the event that $\user_{\DDH}$ guess the correct bit given its view when used as a subroutine, then
+\begin{align*}
+	\prob{\success_{\DDH}} = \prob{\success_{\CDH}}.
+\end{align*}
+We want to relate the probability of $\success_{\DDH}$ with the advantage of $\user_{\DDH}$ when its view is the same as in the game $\strongdetect{\dev_{\DDH}}{\bbdev_{\DDH}}{\user_{\DDH}}$. More precisely we prove
+\begin{align}
+\label{eq:alternativeUndetect2}
+	\prob{\success_{\DDH}} = \prob{\true\leftarrow\strongdetect{\dev_{\DDH}}{\bbdev_{\DDH}}{\user_{\DDH}}}
+\end{align}
+To do this, we show that the view of $\user_{\DDH}$ when used as a subroutine by $\user_{\CDH}$ is the same view of $\user_{\DDH}$ when playing the game $\strongdetect{\dev_{\DDH}}{\bbdev_{\DDH}}{\user_{\DDH}}$. That is, the distribution of the input to $\user_{\DDH}$ and the answers to $\user_{\DDH}$'s queries is the same regardless of where $\user_{\DDH}$ is used. Since the event $\success_{\DDH}$ is also well-defined given $\user_{\DDH}$'s view in the game $\strongdetect{\dev_{\DDH}}{\bbdev_{\DDH}}{\user_{\DDH}}$, \ref{eq:alternativeUndetect2} will follow. To decrease the amount of notation, we let \emph{case 1} be the situation where we consider the view of $\user_{\DDH}$ in the game $\strongdetect{\dev_{\DDH}}{\bbdev_{\DDH}}{\user_{\DDH}}$ and \emph{case 2} be the situation where we consider the view of $\user_{\DDH}$ when used as a subroutine by $\user_{\CDH}$. 
+
+First we consider the input to $\user_{\DDH}$ in both cases. Let $(\cgroup,\order,\generator,h)_1$ be the input in case 1 and $(\cgroup,\order,\generator,h)_2$ the input in case 2. $(\cgroup,\order,\generator,h)_1$ is generated by
+\begin{align*}
+(\cgroup,\order,\generator)\leftarrow \groupgen(1^n),\quad s\unileft\Zq,\quad h\defeq g^s.
+\end{align*} 
+$(\cgroup,\order,\generator,h)_2$ is generated by
+\begin{align*}
+(\cgroup,\order,\generator)\leftarrow \groupgen(1^n),\quad s\unileft\Zq,\quad h\defeq g^s.
+\end{align*} 
+Obviously the two generations above impose the same distributions.
+
+We now look at the answers from the device oracle queries, which all have the same form. Let $(g^x,g^y,g^{xy+b'z})_1$ be an answer in case 1 and $(g^x,g^y,g^{xy+b'z})_2$ be an answer in case 2 (we neglect the part of the answer containing the group instance). We consider separately the two cases $b=0$ and $b=1$ i.e the non-subverted, respectively, subverted case. 
+
+When $b=0$, $(g^x,g^y,g^{xy+b'z})_1$ is generated by 
+\begin{align*}
+	b'\drawbit, \quad x,y,z\unileft \Zq. 
+\end{align*}
+$(g^x,g^y,g^{xy+b'z})_2$ is generated by 
+\begin{align*}
+	b'\drawbit, \quad x,y,z\unileft\Zq
+\end{align*}
+with $x$ and $z$ sampled in the query to $\oracle_{\CDH}$ and $b'$ and $z$ are sampled by $\user_{\CDH}$. Notice that $g^{xy+b'z}$ is computed in the same way with exponents sampled uniformly at random in both cases. Hence, when $b=0$, the answers from the device oracle queries are distributed equally in both cases. 
+
+When $b=1$, $(g^x,g^y,g^{xy+b'z})_1$ is generated by 
+\begin{align*}
+	b'\drawbit, \quad x,z\unileft \Zq, \quad y\defeq \RO(h^{-x}g^x),
+\end{align*}
+where $\RO$ is the random oracle used in the game $\strongdetect{\dev_{\DDH}}{\bbdev_{\DDH}}{\user_{\DDH}}$. $(g^x,g^y,g^{xy+b'z})_2$ is generated by 
+\begin{align*}
+	b'\drawbit, \quad x,z\unileft \Zq, \quad y\defeq \RO_{\CDH}(h^{-x}g^x)
+\end{align*}
+with $x$ and $y$ sampled in the query to $\oracle_{\CDH}$ and $b'$ and $z$ are sampled by $\user_{\CDH}$. Notice that $g^{xy+b'z}$ is computed in the same way with identically distributed exponents, because $\RO_{\CDH}$ and $\RO$ are random functions. Hence, when $b=1$, the answers from the device oracle queries are distributed equally in both cases.
+
+The final thing we need to consider is the queries to the random oracle. The queries needs to be consistent with the answers from the device oracles. This is clear in case 1. In case 2 we achieve this by routing the random oracle query to $\RO_{\DDH}$, to the random oracle $\RO_{\CDH}$. That is, $y$ is computed from the answer by $\RO_{\CDH}$. This makes the queries to $\RO_{\DDH}$ consistent with the answers from the device oracle $\oracle_{\DDH}$ used by $\adve$.
+
+In total we have proved that it is possible for $\user_{\CDH}$ to simulate the challenger in the game $\strongdetect{\dev_{\DDH}}{\bbdev_{\DDH}}{\user_{\DDH}}$ such that the view of $\user_{\DDH}$ in the game is distributed identically to $\user_{\DDH}$'s view when used a subroutine by $\user_{\CDH}$.  
+\end{proof}
+
+What we have just proved is that, if we can detect a $\DDH$ subversion, then we can also detect a $\CDH$ subversion. That is, contrary to the situation of $\CDH$ versus $\DDH$ where $\DDH$ hardness is a stronger assumption than $\CDH$ hardness, we have that $\strongly$ undetectability in $\CDH$ subversion implies $\strongly$ undetectability in the $\DDH$ subversion. From this perspective, a $\strongly$ subversion of $\CDH$ is stronger than a $\strongly$ subversion of $\DDH$. From another perspective we have also proved that $\strongly$ undetectability of the $\CDH$ subversion is not necessary to achieve $\strongly$ undetectability of $\DDH$ subversion, because we can prove $\strongly$ undetectability of the $\DDH$ subversion by just assuming $\DDH$ is hard relative to $\groupgen$. 
+
+\begin{rem}
+The idea in the proof above is that given a $\CDH$ instances, we can generate a matching $\DDH$ instance by just sampling a uniform random bit. Because we had access to the whole instance (the secret information) this allowed us to construct a reduction. Consider the reverse scenario: Generate a $\CDH$ instance given a $\DDH$ instance (with knowledge of the secret information as well). In this case we know the elements $(g^x,g^y,g^{xy+bz})$ and bit $b$. If $b=0$ it is possible to generate the $\CDH$ instance. But if $b=1$ then $g^{xy}g^z$ gives no information on $g^{xy}$ and another trick is needed to generate a correctly distributed $\CDH$ instance. 
+\end{rem}
+
+\begin{comment}
+
+The diagram below displays what we aim to prove. Above we proved $\Rightarrow_1$ while $\Downarrow_2$ and $\Downarrow_3$ are consequences of \propref{strongImplyWeak}. We are left with $\Rrightarrow_4$ which we will prove now. In some sense, this proves that there is no real difference between subverting $\CDH$ and $\DDH$ in the weak sense. 
+
+\begin{center}
+\begin{tabular}{ccc}
+$\bb_{\CDH}$ $\strongly$ undetectable & $\Rightarrow_1$ & $\bb_{\DDH}$ $\strongly$ undetectable \\ 
+$\Downarrow_2$ &  & $\Downarrow_3$ \\ 
+$\bb_{\CDH}$ $\weakly$ undetectable & $\Rightarrow_4$ & $\bb_{\DDH}$ $\weakly$ undetectable \\ 
+\end{tabular} 
+\end{center}
+
+\begin{prop}
+\proplab{CDHweakIFFDDHweak}
+Assume that the $\DDH$ problem is hard relative to $\groupgen$. Then big brother $\bb_{\CDH}$ is a $\weakly$ $(t,K)$-subversion of $\cgame_{\CDH}$ if and only if $\bb_{\DDH}$ is a $\weakly$ $(t,K)$-subversion of $\cgame_{\DDH}$. 
+\end{prop}
+
+\begin{proof}
+THIS DOES NOT HOLD.. The answer from $\oracle_{\DDH}$ does not have the same distribution as in the game... We need to use that $\user_{\DDH}$ can't realise this difference because $\DDH$ hardness assumption is true with respect to $\groupgen$...
+
+
+We start with the $\emph{only if}$ claim. Let $\user_{\DDH}$ be a user in the game $\weakdetect{\dev_{\DDH}}{\bbdev_{\DDH}}{\user_{\DDH}}$. We then construct a user $\user_{\CDH}$ who's goal is to distinguish $\bb_{\CDH}$ using $\user_{\DDH}$ as a subroutine. A priori we run into a problem because $\user_{\DDH}$ expect tuples of the form $(g^x,g^y,g^{xy+bz})$ but we can not produce the element $g^{xy}$ for the case $b = 0$. Fortunately this is no a problem at all, because we play the role of the challenger for $\user_{\DDH}$ with respect to the game $\weakdetect{\dev_{\DDH}}{\bbdev_{\DDH}}{\user_{\DDH}}$ and we can therefore just assume we always sample $b = 1$. Actually, $\user_{\DDH}$ can not distinguish $g^{xy}$ from $g^{xy+bz}$ without breaking the $\DDH$ hardness assumption. The random oracle queries from $\user_{\DDH}$ can be answered by the random oracle in the game $\weakdetect{\dev_{\CDH}}{\bbdev_{\CDH}}{\user_{\CDH}}$. We give a detailed description of $\user_{\CDH}$ below. 
+
+\vspace*{-.3cm}
+\begin{Algorithm}[]{6cm}
+\captionUser
+\caption{$\user_{\CDH}$}
+\label{alg:CDHweakIFFDDHweak}
+\begin{algorithmic}[1]
+\Require $(\bbpk,\params)$  
+\Statex $\user_{\CDH}$ has access to device oracle $\oracle_{\CDH}$ and random oracle $\RO_{\CDH}$.
+\State $\hat{b}\leftarrow \user_{\DDH}^{\oracle_{\DDH},\RO_{\DDH}}(\bbpk,\params)$
+\State \Ret $\hat{b}$
+\Statex\hrulefill
+\end{algorithmic}
+\begin{algorithmic}[1]
+\Statex \underline{Device oracle: \textbf{$\oracle_{\DDH}$}}
+\Statex
+\State Query: $(\ptrans,\strans)\leftarrow \oracle_{\CDH}$
+\State Parse: $\ptrans = (\cgroup,\order,\generator,g^x,g^y)$
+\State $z\unileft\Zq$
+\State $\ptrans' = (\cgroup,\order,\generator,g^x,g^y,g^z)$
+\State \Ret $\ptrans'$
+\end{algorithmic}
+\begin{algorithmic}[1]
+\Statex \underline{Random oracle: \textbf{$\RO_{\DDH}(\lambda)$}}
+\Statex
+\State Query: $r\leftarrow \RO_{\CDH}(\lambda)$
+\State \Ret $r$
+\end{algorithmic}
+\end{Algorithm}
+
+It is obvious from the definition of $\user_{\CDH}$ that success in distinguishing in the game $\weakdetect{\dev_{\CDH}}{\bbdev_{\CDH}}{\user_{\CDH}}$ happens if and only if $\user_{\DDH}$ has success distinguishing. Therefore
+\begin{align*}
+	\adv_{\dev_{\CDH},\bbdev_{\CDH}}^{\weakdetectplain}(\user_{\CDH}) = \adv_{\dev_{\DDH},\bbdev_{\DDH}}^{\weakdetectplain}(\user_{\DDH}). 
+\end{align*}
+since the left-hand side is negligible in $n$ so is the right-hand side. 
+\end{proof}
+
+\end{comment}

@@ -1,0 +1,497 @@
+\chapter{Preliminaries}
+\chaplab{Preliminaries}
+In this chapter we will treat tools used in the following chapters. Many of these tools should be familiar to the reader. We describe them anyway to fix formal notation and thereby have a common body of language. The chapter is partially based on \cite{Katz:2007:IMC:1206501} and partially on \cite{Goldreich:2006:FCV:1202577}.
+
+The chapter is organised as follows: in \secref{notationAndConvensions}, we state the conventions and fix notation. In the next section, we discuss basic tools used in cryptography. Pseudo-random functions are discussed in \secref{pseudorandomFunction}. \secref{blockCipher} defines block ciphers. In \secref{HardnesAssumptions} we define $\DL$ flavoured hardness assumptions, and state and prove the connection between these as well. In the following two sections, we define respectively, public-key and symmetric encryption schemes. We end with a discussion of the Random Oracle Model.
+
+\section{Conventions and Notation}
+\seclab{notationAndConvensions}
+
+Here we describe common notation used throughout. Conventions that are used implicitly are also mentioned.
+
+\subsection{Conventions} 
+
+We use the following conventions, often without explicitly mentioning them.  
+
+\begin{itemize}
+	\itemsep-0.1em
+	\item A probabilistic polynomial time ($\PPT$) algorithm $\adve$ is a probabilistic algorithm which always (i.e. independent of the outcome of its internal coin tosses) halts after a polynomial (in the length of the input) number of steps. We write $a\leftarrow\adve(x)$ to denote running $\adve$ on input $x\in\{0,1\}^*$, producing output $a$. 
+	\item A $l$-bit number is an integer in the range $\left[2^{l-1},2^l\right)$.
+	\item All parties considered have maximal knowledge of each others algorithms. That is, we enforce Kerckhoffs's principle for all parties involved. 
+\end{itemize}
+
+\begin{comment}
+	\item In definitions we are often sampling bit-strings, while in concrete constructions, we sample from e.g. a finite group. We assume this makes no difference and that an efficient encoding exists between a set of bit-strings and the finite group. \fxnote{Maybe remove}
+\end{comment}
+
+\subsection{Notation}
+
+We fix the following notation. 
+\begin{itemize}
+	\itemsep-0.1em
+	\item $\N$, $\Z$ and $\Zq$ denotes respectively the natural numbers, the integers and the set of residue classes modulo $q$. As usual we will associate $\Zq=\{0,1,\ldots,q-1\}$. 
+	\item $n\in\N$ denotes the security parameter.
+	\item $\vert q\vert$ denotes the bit-length for a bit-number $q$ i.e. $\vert q\vert \defeq 1 + \lfloor \log_2(q)\rfloor$.
+	\item $\bot$ denotes the empty string.
+	\item $\adve^{\oracle_1,\oracle_2,\ldots}$ indicates that $\adve$ has oracle access to $\oracle_1,\oracle_2,\ldots$. 
+	\item $\RO$ denotes a random oracle (see \secref{randomOracleModel}).
+	\item $x\leftarrow_{\chi} S$ denotes sampling of an element from a (finite) set $S$ from distribution $\chi$. In the case where $\chi$ is the uniform distribution we write $x\unileft S$. 
+\end{itemize}
+
+\begin{comment}
+	\item $\dev$ denotes a cryptographic device.
+	\item $\param$ denotes a parameters function.
+	\item $\pred$ denotes a predicate function.
+	\item $\cgame$ represents a cryptographic game.
+	\item $\bb$ represents a big brother.
+\end{comment}
+
+\section{Negligible Functions, Probability Ensembles and Indistinguishability} 
+\seclab{randomVariablesEtc}
+
+In this thesis we are concerned with computational security and the most basic tools required are defined in this section. These represent absolute basic tools in modern cryptography. 
+
+In our work, we will consider $\PPT$ adversaries and their success probability in completing specific tasks. Most often this probability should be very small. More precisely the probability should be smaller than all inverse polynomials, also called \emph{negligible}. We precisely define the term below.
+
+\begin{defn}
+(\textbf{Negligible function}) We call a function $\negl\, :\, \N\rightarrow\R$ negligible if for every \emph{positive} polynomial $\poly$ there exists an $N\in\N$ such that
+\begin{align*}
+	\negl(n) < \frac{1}{\poly(n)},\quad \forall\, n>N.
+\end{align*}
+\end{defn}
+Standard examples of negligible functions are $2^n$, $2^{-\sqrt{n}}$ and $n^{-\log_2(n)}$. The perk of working with negligible functions is that they satisfy desirable closure properties: the sum of two negligible functions is negligible and the product of a negligible function and a polynomial is again negligible. This will become handy later. 
+
+When defining a game, we often need the notion of computational indistinguishability. More precisely, we need to define when two distributions are computational indistinguishable. In doing this, we follow the standard way: two distributions are called computational indistinguishable if no $\PPT$ distinguisher $\dist$ can tell them apart. The formulation of that requires two infinite sequences of distributions. Such sequences are called probability ensembles.
+
+\begin{defn}
+(\textbf{Probability ensemble}) A probability ensemble indexed by $\N$ is a sequence of random variables indexed by $\N$. 
+\end{defn}
+
+The index parameter will always be the security parameter $n$ but we will never write the index parameter because it will be clear from the context. Below, we define computational indistinguishability of two probability ensembles. 
+
+\begin{defn}
+(\textbf{Computational indistinguishability}) Two probability ensembles $\{X_n\}_n$ and $\{Y_n\}_n$ are computational indistinguishable if there for every $\PPT$ distinguisher $\dist$ exists a negligible function $\negl$ such that 
+\begin{align*}
+	\vert \prob{\true\leftarrow \dist(X_n,n)}-\prob{\true\leftarrow\dist(Y_n,n)}\vert \leq \negl(n),
+\end{align*}
+where the probability is taken over the random variables $X_i$ or $Y_i$ and the internal randomness used by $\dist$. 
+\end{defn}
+In this thesis, the probability ensembles will in general be represented by random experiments, which we will call games. 
+
+\section{Pseudo-Random Function}
+\seclab{pseudorandomFunction}
+
+Consider a keyed function $F\, :\, \{0,1\}^*\times\{0,1\}^*\rightarrow\{0,1\}^*$, where the first input is called the key and denoted by $\key$. For a specific key $\key$, we write $F_{\key}(x) = F(\key,x)$ for any $x\in\{0,1\}^*$. If there exists a polynomial-time algorithm that computes $F_{\key}(x)$ for any key $\key$ and input $x$, $F$ is called efficiently computable. 
+
+The security parameter $n$ determines the key length, input length and output length. We therefore associate three functions $l_{in}(n)$, $l_{out}(n)$ and $l_{key}(n)$. For any key $\key\in\{0,1\}^{l_{key}(n)}$ the function $F_{\key}$ is only defined for input $x\in\{0,1\}^{l_{in}(n)}$ and output $F_{\key}\in\{0,1\}^{l_{out}(n)}$. We will however only deal with \emph{lengh-preserving} functions, which means that $l_{in}(n)=l_{out}(n)=l_{key}(n)=n$. Hence, for each key $\key\in\{0,1\}^n$, we obtain a function $F_{\key}$ mapping $n$-bit strings to $n$-bit strings. Let $\func_n$ be that set of all functions that maps $n$-bit strings to $n$-bit strings. Note $\vert \func_n\vert = 2^{2^n\cdot n}$. Below we formally define a pseudo-random function.
+
+\begin{defn}
+\deflab{pseudoRandom}
+	(\textbf{Pseudo-random function}) Let $F\, :\, \{0,1\}^*\times\{0,1\}^*\rightarrow \{0,1\}^*$ be an efficiently computable, length-preserving and keyed function. $F$ is a pseudo-random function if there for every $\PPT$ distingusher $\dist$ exists a negligible function $\negl$ such that 
+\begin{align*}
+\adv_{F}^{\PRF}(\dist)\defeq\left\vert\mathstrut \prob{\true\leftarrow\dist^{F_k(\cdot)}(n)} - \prob{\true\leftarrow\dist^{f(\cdot)}(n)}\right\vert \leq \negl(n),
+\end{align*}
+where the first probability is over $k\suni \{0,1\}^n$ and randomness of $\dis$, and the second probability is over $f\unileft\func_n$ and randomness of $\dis$.
+\end{defn}
+
+Note that the distinguisher can interact freely with its oracle i.e. ask queries adaptively. Also note that the distinguisher must not know the key $\key$ otherwise it would be trivial to distinguish $F$ and $f$. Requiring $F$ to be length-preserving is not an inherent part of $\PRF$s but it simplifies applications. 
+
+
+\section{Block Cipher}
+\seclab{blockCipher}
+
+Block ciphers are essential tools for shared-key cryptography and are used in a plethora of schemes. There are two very well known real-world instantiations of a block cipher: $\DES$ and $\AES$. The former is the oldest and is being gradually phased out. The latter is the newest and most modern block cipher, which should be used for new practical applications.
+
+To define a block cipher, we must first introduce a little notation. Given a length-preserving, keyed function $F$. We call $F$ a keyed permutation if $F_{\key}$ is bijective for every key $\key\in\{0,1\}^n$. We call $n$ the block length. We call a keyed function $F$ efficient if it is both efficiently computable and efficiently invertible for every key $\key$. 
+
+\begin{defn}
+(\textbf{Blockcipher}) A block cipher is an efficient, length-preserving, keyed permutation denoted by $\EncBlock\, :\, \{0,1\}^n\times\{0,1\}^n\rightarrow \{0,1\}^n$.
+\end{defn}
+
+In practice, block ciphers are constructed as secure instantiations of (strong) pseudo-random functions with some fixed key length. Strong pseudo-random is a stronger assumption than pseudo-random  \defref{pseudoRandom} (but that kinda follows obviously from the suffix strong...). Let $\perm_n$ be the set of all permutations on $\{0,1\}^n$. Note $\vert \perm_n \vert = (2^n)!$.  
+
+\begin{defn}
+(\textbf{Strong pseudo-random function}) An efficient, length-preserving and keyed function $F\, : \, \{0,1\}^n\times\{0,1\}^n\rightarrow\{0,1\}^n$ is as strong pseudo-random function if there for every $\PPT$ distinguisher $\dist$ exists a negligible function $\negl$ such that
+\begin{align*}
+	\left\vert \mathstrut\prob{\true\leftarrow \dist^{F_{\key}(\cdot),F_{\key}^{-1}(\cdot)}(n)} - \prob{\true\leftarrow \dist^{f(\cdot),f^{-1}(\cdot)}(n)}\right\vert \leq \negl(n),
+\end{align*}
+where the first probability is also taken over the randomness used by $\dis$ and $k\unileft\{0,1\}^n$, and the second probability is taken over the randomness used by $\dis$ and $f\unileft\perm_n$. 
+\end{defn}
+
+\section{Hardness Assumption}
+\seclab{HardnesAssumptions}
+
+In this section, we introduce a number of hardness assumptions that can be defined in any class of cyclic groups. To not be concerned with how the group is generated (especially the group description), we let $\groupgen$ denote a generic, polynomial-time group-generation algorithm. This algorithm takes input $1^n$ and outputs a description\footnote{Even though all cyclic groups of a given order are isomorphic, the description of the group determines the computational complexity of doing operations.} of a cyclic group $\cgroup$, its order $q$ with $\vert q\vert = n$, and a generator $g\in\cgroup$. It is implicitly assumed that there exists polynomial-time algorithms (in $n$) for computing the group operation in $\cgroup$ and testing whether a given bit-string represents an element in $\cgroup$. 
+
+We now proceed to define three different hardness assumptions: $\DL$, $\CDH$ and $\DDH$. Afterwards it is discussed how they related to each other. First the $\DL$ hardness game is presented. 
+
+\begin{defn}
+\deflab{DL}
+(\textbf{Discrete logarithm problem}) Let $\groupgen(1^n)$ be a polynomial-time algorithm that on input $1^n$ outputs a cyclic group $\cgroup$ of prime order $\order$, $\vert \order\vert = n$ and generator $\generator$. The $\DL$ problem is (informally) to compute $x$ given $g^x$ with randomly chosen $x$ from $\Zq$. Formally, the \textit{$\DL$ problem is hard relative to} $\groupgen$ if for all $\PPT$ adversaries $\adve$ there exist a negligible function $\negl$ such that 
+\begin{align*}
+	\adv_{\groupgen}^{\DL}(\adve)\defeq \prob{\true\leftarrow \DL_{\groupgen}^{\adve}(n)} \leq \negl(n),
+\end{align*}
+where the probability is taken over the randomness used the game $\DL_{\groupgen}^{\adve}(n)$ defined in \figref{DL-game}.
+\end{defn}
+
+\begin{boxfigGame}{$\DL$ hardness game.}{DL-game}
+  \begin{description}
+	\item[\underline{\textbf{Game} $\DL_{\groupgen}^{\adve}(n)$}] ~
+ 	
+ 		$(\cgroup,\order,\generator)\leftarrow\groupgen(1^n)$ \\
+ 		$x\leftarrow_R \Zq$ \\
+ 		$h \defeq g^x$ \\
+		$h'\leftarrow\adve(\cgroup,\order,\generator,h)$ \\
+		\Ret $\askequal{h}{h'}$
+  \end{description}
+\end{boxfigGame}
+
+The above assumption simply states that there exists a polynomial-time algorithm $\groupgen$ for which computing the discrete logarithm is hard. 
+
+Next we will define two different Diffie-Hellman problems. These also relate to the same kind of group-generation algorithm as before but are stronger assumptions than the $\DL$ assumption. We first present the $\CDH$ hardness game. 
+
+\begin{defn} 
+\deflab{CDH}
+(\textbf{Computational Diffie-Hellman problem}) Let $\groupgen(1^n)$ be a polynomial-time algorithm that on input $1^n$ outputs a cyclic group $\cgroup$ of prime order $\order$, $\vert \order\vert = n$ and generator $\generator$. The $\CDH$ problem is (informally) to compute $g^{xy}$ given $g^x$ and $g^y$ with randomly chosen $x,y$ from $\Zq$. Formally, the \textit{$\CDH$ problem is hard relative to} $\groupgen$ if for all $\PPT$ adversaries $\adve$ there exist a negligible function $\negl$ such that 
+\begin{align*}
+	\adv_{\groupgen}^{\CDH}(\adve)\defeq \prob{\true\leftarrow \CDH_{\groupgen}^{\adve}(n)} \leq \negl(n),
+\end{align*}
+where the probability is taken over the randomness used in the game $\CDH_{\groupgen}^{\adve}(n)$ defined in \figref{CDH-DDH-game}.
+\end{defn}
+
+In \propref{cdhImplyDl} we prove that if $\CDH$ problem is hard relative to $\groupgen$ then $\DL$ is also hard relative to $\groupgen$. It is not known whether the two assumptions are equivalent. The last hardness assumption we present is the $\DDH$ hardness game. 
+
+\begin{defn}
+\deflab{DDH}
+(\textbf{Decisional Diffie-Hellman problem}) Let $\groupgen(1^n)$ be a polynomial-time algorithm that on $1^n$ outputs a cyclic group $\cgame$ of prime order $\order$, $\vert \order\vert = n$ and generator $\generator$. The $\DDH$ problem is (informally) to distinguish $g^{xy}$ from $g^z$ with randomly chosen $x,y,z$ from $\Zq$. Formally, the \textit{$\DDH$ problem is hard relative to} $\groupgen$ if for all $\PPT$ adversaries $\adve$ there exists a negligible function $\negl$ such that 
+\begin{align*}
+	\adv_{\groupgen}^{\DDH}(\adve)\defeq 2\cdot\left\vert \prob{\true\leftarrow \DDH_{\groupgen}^{\adve}(n)} - \frac{1}{2} \right\vert \leq \negl(n),
+\end{align*}
+where the probability is taken over the randomness used in the game $\DDH_{\groupgen}^{\adve}(n)$ defined in \figref{CDH-DDH-game}.
+\end{defn}
+The $\DDH$ assumption is equivalent to the following: for all $\PPT$ adversaries $\adve$ there exists a negligible function $\negl$ such that
+\begin{align*}
+	\left\vert\prob{\true\leftarrow \adve\left(\cgroup,\order,\generator,g^x,g^y,g^z\right)} - \prob{\true\leftarrow\adve\left(\cgroup,\order,\generator,g^x,g^y,g^{xy}\right)}\right\vert\leq \negl(n),
+\end{align*}
+where we on the left takes the probability over $(\cgroup,\order,\generator)\leftarrow\groupgen(1^n)$, $x,y,z\suni\Zq$ and the randomness used by $\adve$, and  on the right takes the probability over $(\cgroup,\order,\generator)\leftarrow\groupgen(1^n)$, $x,y\suni\Zq$ and the randomness used by $\adve$ 
+
+\begin{boxfigTwo}{$\CDH$ (left) and $\DDH$ (right) hardness games.}{CDH-DDH-game}
+\begin{minipage}{0.45\textwidth}
+ 	%\vspace{1ex}
+    \smallskip
+	\begin{description}
+ 	\item[\underline{\textbf{Game} $\CDH_{\groupgen}^{\adve}(n)$}] ~
+ 	
+ 		$(\cgroup,\order,\generator)\leftarrow\groupgen(1^n)$ \\
+ 		$x,y\leftarrow_R \Zq$ \\
+ 		$h_1 \defeq g^x$ \\
+ 		$h_2 \defeq g^y$ \\
+		$\hat{h}\leftarrow\adve(\cgroup,\order,\generator,h_1,h_2)$ \\
+		\Ret $\askequal{\hat{h}}{g^{xy}}$ \\
+		\vphantom{Empty line} \\
+		\vphantom{Empty line}
+		\smallskip
+  	\end{description}
+\end{minipage}
+    & 
+\begin{minipage}{0.45\textwidth}
+ 	%\vspace{1ex}
+    \smallskip
+	\begin{description}
+ 	\item[\underline{\textbf{Game} $\DDH_{\groupgen}^{\adve}(n)$}] ~
+ 	
+		$(\cgroup,\order,\generator)\leftarrow\groupgen(1^n)$ \\
+ 		$x,y,z\leftarrow_R \Zq$ \\
+ 		$b\drawbit$ \\
+ 		$h_1 \defeq g^x$ \\
+ 		$h_2 \defeq g^y$ \\
+ 		$h_3 \defeq g^{xy+bz}$ \\
+		$\hat{b}\leftarrow\adve(\cgroup,\order,\generator,h_1,h_2,h_3)$ \\
+		\Ret $\askequal{\hat{b}}{b}$
+		\smallskip
+  	\end{description}
+\end{minipage}
+     \\ 
+\end{boxfigTwo}
+
+In \propref{ddhImplyCdh} we prove that if the $\DDH$ problem is hard relative to $\groupgen$ then $\CDH$ is also hard relative to $\groupgen$. The converse statement is unknown but appears not to be true: the $\DDH$ problem is not hard in cyclic groups of the form $\Zq^*$ with $q$ prime. The reason is that if $g^x$ and $g^y$ are quadratic residues in $\Zq^*$ then so is $g^{xy}$, whereas $g^z$ is a non-quadratic residue in $\Zq^*$ with probability $1/2$. The solution is to work in subgroups of $\Zq^*$. One option is the subgroup of all quadratic residues in $\Zq^*$. Another example where $\DDH$ is not hard is in bilinear groups over elliptic curves (for certain instances). 
+
+We next present the two basic (known) connections between $\DL$, $\CDH$ and $\DDH$ formulated in two propositions. We provide (rather) informal proofs of the two statements. 
+
+\begin{prop}
+\proplab{cdhImplyDl}
+If the $\CDH$ problem is hard relative to $\groupgen$ then the $\DL$ problem is hard relative to $\groupgen$. 
+\end{prop}
+
+\begin{proof}
+To prove this statement, we must show that given a $\PPT$ algorithm $\adve$ that can solve the $\DL$ problem, we can construct a $\PPT$ algorithm that solves the $\CDH$ problem. Let $\adve$ be such an algorithm i.e. $x\leftarrow\adve(\cgroup,\order,\generator,g^x)$ with $(\cgroup,q,g)\leftarrow\groupgen(1^n)$ and $x\unileft\Zq$. Given an instance of the $\CDH$ problem $(\cgroup,\order,\generator,g^x,g^y)$ as input let $\adve'$ be defined as follows: compute $x\leftarrow\adve(\cgroup,\order,\generator,g^x)$ and then return $(g^y)^x$ as the result. If $\adve$ succeeds with non-negligible probability then clearly $\adve'$ would too. Additionally, since $\adve$ runs in polynomial-time $\adve'$ also runs in polynomial-time.
+\end{proof}
+
+\begin{prop}
+\proplab{ddhImplyCdh}
+If the $\DDH$ problem is hard relative to $\groupgen$ then the $\CDH$ problem is hard relative to $\groupgen$. 
+\end{prop}
+
+\begin{proof}
+To prove this statement, we must show that given a $\PPT$ algorithm $\adve$ that solves the $\CDH$ problem, we can construct a $\PPT$ algorithm $\adve'$ that solves the $\DDH$ problem. That is, the algorithm $\adve$ computes $g^{xy}\leftarrow \adve(\cgroup,q,g,g^x,g^y)$ with $(\cgroup,q,g)\leftarrow\groupgen(1^n)$ and $x,y\unileft\Zq$. Given a $\DDH$ instance $(\cgroup,q,g,g^x,g^y,g^z)$ as input define $\adve'$ in the following way: compute $g^{xy}\leftarrow \adve(\cgroup,q,g,g^x,g^y)$ and compare $g^{xy}$ with $g^z$; if they are equal output 0 and output 1 if they are not. Obviously, if $\adve'$ succeeds with non-negligible probability then $\adve$ also succeeds with non-negligible probability. Also, since $\adve$ is a polynomial-time algorithm $\adve'$ is also a polynomial-time algorithm. 
+\end{proof}
+
+
+\section{Public-Key Encryption}
+\seclab{publicKeyEncryption}
+
+This section will contain the syntax for public-key encryption. In addition we will present two different notions of security, $\EAV$ and $\CPA$, and a concrete example of a public-key encryption scheme. Namely, we will present the $\elGamal$ public-key encryption scheme and prove that this scheme is $\CPA$-secure. Fist we define a public-key encryption scheme. 
+
+\begin{defn}
+(\textbf{Public-key encryption scheme}) We denote a public-key encryption scheme with $\spkcs$, which consists of 3 algorithms: key generation algorithm, encryption algorithm and decryption algorithm. We specify each algorithm below: 
+\begin{itemize}
+	\itemsep-0.1em
+	\item $\gen(1^n)$ (key generation algorithm) is a $\PPT$ algorithm, which on input a security parameter $n$ outputs a secret key $\sk$ and public key $\pk$, both with length at least $n$. We assume that $n$ can be determined by $\pk$ and $\sk$. We write $(\pk,\sk)\leftarrow\gen(1^n)$. 
+	\item $\enc(\pk,m)$ (encryption algorithm) is a $\PPT$ algorithm, which on input a public key $\pk$ and message $m$, where the message space may depend on the public key $\pk$, outputs a ciphertext $c$. We write $c\leftarrow\enc_{\pk}(m)$.
+	\item $\dec(\sk,c)$ (decryption algorithm) is a $\PPT$ algorithm, which on input a secret key $\sk$ and ciphertext $c$ outputs a message $\hat{m}$ or $\bot$ if decryption fails. We assume WLOG that $\dec$ is deterministic. We write $\hat{m} = \dec_{\sk}(c)$.
+\end{itemize}
+We reguire correctness except for some negligible probability. That is, there exists a negligible function $\negl$ such that 
+\begin{align*}
+	\prob{\dec_{\sk}(\enc_{\pk}(m))=m}\geq 1-\negl(n),
+\end{align*}
+where the probability is over $(\pk,\sk)\leftarrow \gen(1^n)$ and internal randomness of $\enc$.
+\end{defn}
+
+We next present two different notions of security for a public-key encryption scheme: $\EAV$ and $\CPA$. The notions are equivalent though, which is discussed after the presentation of the definitions. 
+
+\begin{defn}
+(\textbf{Indistinguishable encryptions in the presence of an eavesdropper}) A public-key encryption scheme $\spkcs = (\gen,\enc,\dev)$ has indistinguishable encryptions in the presence of an eavesdropper ($\EAV$) if for every $\PPT$ adversary $\adve$ there exists a negligible function $\negl$ such that
+\begin{align*}
+	\adv_{\spkcs}^{\EAV}(n)\defeq 2\left\vert \prob{\true\leftarrow \EAV_{\spkcs}^{\adve}(n)} - \frac{1}{2}\right\vert \leq \negl(n),
+\end{align*}
+where the probability is over the randomness used in Game $\EAV_{\spkcs}^{\adve}(n)$ defined in \figref{EAVsec}.
+\end{defn}
+
+\begin{boxfigGame}{$\EAV$ security game.}{EAVsec}
+  \begin{description}
+ 	\item[\underline{$\EAV_{\spkcs}^{\adve}(n)$}] ~
+ 	
+ 		$(\pk,\sk)\leftarrow\gen(1^n)$ \\
+ 		$(m_0,m_1)\leftarrow \adve(\pk)$ with $\vert m_0\vert =\vert m_1\vert$ \\
+ 		$b\unileft\{0,1\}$ \\
+ 		$c \leftarrow \enc_{\key}(m_b)$ \\
+ 		$\hat{b}\leftarrow \adve(c)$ \\
+		\Ret $\askequal{\hat{b}}{b}$ 
+		\smallskip
+  \end{description}
+\end{boxfigGame}
+
+
+Compared to the $\EAV$ security game, the $\CPA$ security game gives more power to the adversary by allowing oracle access to the encryption function both before and after the challenge ciphertext is sent. It turns out that this gives no advantage to the adversary over the capabilities of an adversary in the $\EAV$ security game, see \propref{eavesdropperImplyCPA}.
+
+\begin{defn}
+(\textbf{$\CPA$ security}) A public-key encryption scheme $\spkcs = (\gen,\enc,\dev)$ has indistinguishable encryptions under a chosen-plaintext attack ($\CPA$) if for every $\PPT$ adversaries $\adve$ there exists a negligible function $\negl$ such that
+\begin{align*}
+	\adv_{\spkcs}^{\CPA}(n)\defeq 2\left\vert \prob{\true\leftarrow \CPA_{\spkcs}^{\adve}(n)} - \frac{1}{2}\right\vert \leq \negl(n),
+\end{align*}
+where the probability is over the randomness used in Game $\CPA_{\spkcs}^{\adve}(n)$ defined in \figref{CPAsec}. The adversary is allowed to interact with $\oracle_{\enc_{\pk}}$ adaptively, and as many times as it likes (polynomial many in $n$). 
+\end{defn}
+
+\begin{boxfigGame}{$\CPA$ security game.}{CPAsec}
+  \begin{description}
+ 	\item[\underline{$\CPA_{\spkcs}^{\adve}(n)$}] ~
+ 	
+ 		$(\pk,\sk)\leftarrow\gen(1^n)$ \\
+ 		$(m_0,m_1)\leftarrow \adve^{\oracle_{\enc_{\pk}}(m)}(\pk)$ with $\vert m_0\vert =\vert m_1\vert$ \\
+ 		$b\unileft\{0,1\}$ \\
+ 		$c \leftarrow \enc_{\key}(m_b)$ \\
+ 		$\hat{b}\leftarrow \adve^{\oracle_{\enc_{\pk}}(m)}(c)$ \\
+		\Ret $\askequal{\hat{b}}{b}$ 
+		\smallskip
+  \end{description}
+  The oracle ${\oracle_{\enc_{\pk}}}$ returns the encryption of $m$ under the public key $\pk$. 
+\end{boxfigGame}
+
+The intuition of the next proposition is that knowing the public key effectively allows an adversary to implement an encryption oracle. Therefore $\CPA$ provides no extra power to an adversary compared to $\EAV$. We skip the proof. 
+
+\begin{prop}
+\proplab{eavesdropperImplyCPA}
+Let $\spkcs$ be a public-key encryption scheme. If $\spkcs$ is $\EAV$-secure, it is also $\CPA$-secure. 
+\end{prop}
+
+As a final act in this section, we present a concrete scheme and prove that it is $\CPA$ secure.
+
+\begin{defn}
+\deflab{elGamal}
+(\textbf{$\elGamal$}) Let $\groupgen(1^n)$ be a polynomial-time algorithm that takes as input $1^n$ and outputs, except possibly with negligible probability, a cyclic group $\cgroup$ of order $q$, $\vert q\vert = n$, and generator $g$ (of $\cgroup$). We specify the  key generation, encryption algorithm and decryption algorithm in \figref{elGamalDef}. 
+\end{defn}
+
+\begin{boxfigGame}{$\elGamal$ public-key encryption scheme.}{elGamalDef}
+  \begin{description}
+ 	\item[\underline{$\gen(1^n)$}] ~
+ 	
+ 		$(\cgroup,\order,\generator)\leftarrow\groupgen(1^n)$ \\
+ 		$x\unileft\Zq$ \\
+ 		$h\defeq g^x$ \\
+ 		$\pk\defeq (\cgroup,\order,\generator,h)$ \\
+ 		$\sk\defeq (\cgroup,\order,\generator,x)$ \\
+ 		\Ret $(\pk,\sk)$
+
+	\item[\underline{$\enc(\pk,m)$}] ~
+	
+		Parse: $\pk = (\cgroup,\order,\generator,h)$ \\
+		$y\unileft\Zq$ \\
+		$c \defeq (g^y,h^y\cdot m)$ \\		
+		\Ret $c$
+		
+	\item[\underline{$\dec(\sk,c)$}] ~
+	
+		Parse: $\sk = (\cgroup,\order,\generator,x)$ \\
+		$\hat{m} \defeq c_2\cdot (c_1^x)^{-1}$ \\
+		\Ret $\hat{m}$
+		\smallskip
+  \end{description}
+\end{boxfigGame}
+
+The $\elGamal$ scheme presented above can be proven $\CPA$-secure. The proof is a reduction to the $\DDH$ hardness game. 
+
+\begin{prop}
+\proplab{elGamalCPA}
+The $\elGamal$ public-key encryption scheme is $\CPA$-secure.  
+\end{prop}
+
+\begin{proof}
+To show $\CPA$ security it is enough to show cipher-text indistinguishable in the presence of an eavesdropper by \propref{eavesdropperImplyCPA}. 
+
+Let $\adve$ be a $\PPT$ adversary and consider the game $\EAV_{\spkcs}^{\adve}(n)$. To prove the proposition, we construct a reduction to the $\DDH$ problem relative to $\groupgen$. In the $\DDH$ game a distinguisher $\dist$ receives a tuple $(\cgroup,q,g,g^x,g^y,g^z)$ where  $x,y$ are uniform and $z$ is either a uniform element or $xy$. Below we construct $\dist$ using $\adve$ as a subroutine. Note that we use the alternative (but equivalent) definition of $\DDH$ being hard. 
+
+
+
+\begin{Algorithm}[]{6cm}
+\captionDistinguisher
+\caption{$\dist$}
+\label{alg:distElgamal}
+\begin{algorithmic}[1]
+\Require $(\cgroup,\order,\generator,g^x,g^y,g^z)$ 
+\State $\pk \defeq (\cgroup,q,g,g^x)$ 
+\State $(m_0,m_1)\leftarrow\adve(\pk)$
+\State $b'\unileft\{0,1\}$
+\State $c_1\defeq g^y$
+\State $c_2\defeq g^z\cdot m_{b'}$
+\State $c \defeq (c_1,c_2)$
+\State $\hat{b}'\leftarrow\adve(c)$
+\State \Ret $\askequal{\hat{b}'}{b'}$
+\end{algorithmic}
+\end{Algorithm}
+
+Because $\DDH$ is hard relative to $\groupgen$ there exists a negligible function such that
+\begin{align*}
+	\left\vert\prob{\true\leftarrow \dist\left(\cgroup,\order,\generator,g^x,g^y,g^z\right)} - \prob{\true\leftarrow\dist\left(\cgroup,\order,\generator,g^x,g^y,g^{xy}\right)}\right\vert\leq \negl(n),
+\end{align*}
+where $(\cgroup,q,g)\leftarrow\groupgen(1^n)$, $x,y\unileft\Zq$ and either $z\leftarrow\Zq$ or $z=xy$. On the right-hand side $\dist$ receives the public key $(\cgroup,q,g,g^x)$ and ciphertext $(g^y,g^{xy}\cdot m_{b'})$. Therefore the view of $\dist$ when run as a subroutine by $\dist$ is distributed identically to $\dist$'s view in the game $\EAV_{\spkcs}^{\adve}(n)$. Since $\dist$ outputs $\true$ if and only if $\adve$'s output satisfy $\hat{b'} = b'$, we have that
+\begin{align*}
+	\prob{\true\leftarrow\dist\left(\cgroup,\order,\generator,g^x,g^y,g^{xy}\right)} = \prob{\true\leftarrow\EAV_{\spkcs}^{\adve}(n)}.
+\end{align*}
+On the left-hand side $\dist$ receives the public key $(\cgroup,q,g,g^x)$ and ciphertext $(g^y,g^z\cdot m_{b'})$. Since $z$ is a uniform element of $\Zq$ the second component of the ciphertext is a uniformly distributed element of $\cgroup$ and, in particular, is independent of the message $m_{b'}$. The first component is also independent of $m_{b'}$. Therefore, $\adve$ learns no information on the ciphertext $m_{b'}$ and only has the option of guessing the bit $b'$. This implies that the probability of the event $\hat{b}' = b'$ is equal to $1/2$. Since $\dist$ outputs true if and only if $\hat{b}' = b$, we have that
+\begin{align*}
+	\prob{\true\leftarrow \dist\left(\cgroup,\order,\generator,g^x,g^y,g^z\right)} = \frac{1}{2}.
+\end{align*} 
+Combining the above identities, we get (where 2 is multiplied on both sides)
+\begin{align*}
+ 2\cdot \negl(n) \geq 2\left\vert \frac{1}{2} - \prob{\true\leftarrow\EAV_{\spkcs}^{\adve}(n)}\right\vert.
+\end{align*}
+$2\cdot\negl(n)$ is clearly negligible which implies the result. 
+\end{proof}
+\begin{comment}
+%\vspace*{-.3cm}
+\begin{Algorithm}[]{6cm}
+\captionDistinguisher
+\caption{$\dist$}
+\label{alg:distElgamal}
+\begin{algorithmic}[1]
+\Require $(\cgroup,\order,\generator,g^x,g^y,g^z)$ 
+\State $\pk \defeq (\cgroup,q,g,g^x)$ 
+\State $(m_0,m_1)\leftarrow\adve(\pk)$
+\State $b'\unileft\{0,1\}$
+\State $c_1\defeq g^y$
+\State $c_2\defeq g^z\cdot m_b$
+\State $c \defeq (c_1,c_2)$
+\State $\hat{b'}\leftarrow\adve(c)$
+\State \Ret $\askequal{\hat{b'}}{b'}$
+\end{algorithmic}
+\end{Algorithm}
+
+Since $\DDH$ is hard relative to $\groupgen$ there exists a negligible function $\negl$ such that
+\begin{align*}
+	\negl(n)\geq \left\vert\prob{\true\leftarrow \dist\left(\cgroup,\order,\generator,g^x,g^y,g^z\right)} - \prob{\true\leftarrow\dist\left(\cgroup,\order,\generator,g^x,g^y,g^{xy}\right)}\right\vert.
+\end{align*}
+\end{comment}
+
+
+It is possible to modify the $\elGamal$ scheme to produce a scheme that is $\CCA$ secure \cite{Katz:2007:IMC:1206501}.
+
+
+\section{Symmetric Encryption}
+
+Below we define the syntax of a symmetric encryption scheme. Note that the notation is the same as with public-key encryption. It will be clear from the context, which kind of encryption scheme that is referred to. 
+
+\begin{defn}
+(\textbf{Symmetric Encryption Scheme}) We denote a symmetric encryption scheme with $\spkcs$, which consists of 3 algorithms: key generation algorithm, encryption algorithm and decryption algorithm. We specify each algorithm below. 
+\begin{itemize}
+	\itemsep-0.1em
+	\item $\gen(1^n)$ (key generation algorithm) is a $\PPT$ algorithm, which on input a security parameter $n$ outputs a symmetric key $\key$. It is required that $\vert \key\vert \geq n$. We write $\key\leftarrow\gen(1^n)$. 
+	\item $\enc(\key,m)$ (encryption algorithm) is a $\PPT$ algorithm, which on input a public key $\key$ and message $m\in\{0,1\}^*$ outputs a ciphertext $c$. We write $c\leftarrow\enc_{\key}(m)$.
+	\item $\dec(\key,c)$ (decryption algorithm) is a $\PPT$ algorithm, which on input a symmetric key $\key$ and ciphertext $c$ outputs a message $\hat{m}$ or $\bot$ if decryption fails. We assume WLOG that $\dec$ is deterministic. We write $\hat{m} = \dec_{\key}(c)$.
+\end{itemize}
+We require perfect correctness: for all $n$, all keys $\key$ output by $\gen(1^n)$, and all messages $m$ the following is true with probability 1: 
+\begin{align*}
+	\dec_{\key}(\enc_{\key}(m))=m.
+\end{align*} 
+\end{defn}
+
+We only define one notion of security for symmetric encryption schemes. Namely, a symmetric encryption scheme $\spkcs$ is secure if an adversary can not distinguish the encryption of two messages that the adversary choose. Details are as follows
+
+\begin{defn}
+(\textbf{Indistinguishable encryptions in the presence of an eavesdropper}) A symmetric encryption scheme $\spkcs = (\gen,\enc,\dev)$ has indistinguishable encryptions in the presence of an eavesdropper ($\EAV$) if there for every $\PPT$ adversary $\adve$ exists a negligible function $\negl$ such that
+\begin{align*}
+	\adv_{\spkcs}^{\EAV}(\adve) \defeq 2\cdot \left\vert \prob{\true\leftarrow \EAV_{\spkcs}^{\adve}(n)} - \frac{1}{2} \right\vert \leq \negl(n),
+\end{align*}
+where the probability is taken over the randomness in the game $\EAV_{\spkcs}^{\adve}(n)$ defined in \figref{EAVsymSec}.
+
+\begin{boxfigGame}{$\EAV$-security game of a symmetric encryption scheme $\spkcs$.}{EAVsymSec}
+  \begin{description}
+	\item[\underline{\textbf{Game} $\EAV_{\spkcs}^{\adve}(n)$}] ~
+ 	
+		$(m_0,m_1)\leftarrow \adve(1^n)$ \\
+		$\key\leftarrow \gen(1^n)$ \\
+		$b\unileft\{0,1\}$ \\
+		$c\leftarrow \enc_{\key}(m_b)$ \\
+		$\hat{b}\leftarrow \adve(c)$ \\
+		\Ret $\askequal{\hat{b}}{b}$ 
+		
+  \end{description}
+\end{boxfigGame}
+
+\end{defn}
+
+$\EAV$-security is one of the the weakest forms of security one can wish for in a symmetric encryption scheme. A stronger notion is the notion of a $\CPA$ secure symmetric encryption scheme. In \secref{publicKeyEncryption} we saw that $\EAV$-security is equivalent to $\CPA$-security of a public-key encryption scheme. That is not the case when dealing with symmetric encryption: $\CPA$-security implies $\EAV$-security, but the converse does not hold, see \exref{EAVimplyNotCPA}.
+
+\begin{ex}
+\exlab{EAVimplyNotCPA}
+Consider the scheme where key generation $\gen(1^n)$ is defined as $\key\unileft\{0,1\}^n$, encryption as $\enc_{\key}(m) \defeq \key\oplus m$ for $m\in\{0,1\}^n$ and decryption $\dec_{\key}(c) \defeq \key\oplus c$. Obviously this is the $\onetimepad$ encryption scheme, which is a perfect secure scheme and thus also $\EAV$-secure. It is well known that doing multiple $\onetimepad$-encryptions using the same key $\key$ allows an adversary to infer information on the message $m$. Therefore, the $\onetimepad$ encryption scheme is not $\CPA$-secure (it is called \textbf{one-time}-pad for a reason). 
+\end{ex}
+
+\section{Random Oracle Model}
+\seclab{randomOracleModel}
+
+In the Random Oracle Model, we assume the existence of a random function $\RO$, and give all parties oracle access to this function. A good way to think about the Random Oracle Model is to think about it as a black box that takes a binary string as input and returns a binary string as output. Everyone, including the adversary, can ask private queries to this box. The output to each query is assumed to be uniformly random such that if a party queries $x$ then no one else learns $x$, or even learns that this party queried the oracle in the first place. 
+
+The random oracle $\RO$ must be consistent. That is, if $y$ is the output of a query with $x$ then $y$ is also the output if $x$ is ever queried again. This property emulates the behaviour of a hash function. Replacing hash functions with random oracles (random functions) in proofs is one of the usual use-cases of the Random Oracle Model.  
+
+The probability space changes slightly when games are considered in the Random Oracle Model instead of the Standard Model. Namely, in addition to what the probability is taken over in the Standard Model, we must also take the probability over the random choices of $\RO$. 
+
+Using the Random Oracle Model gives powerful tools. We will mainly use two properties: 
+
+\begin{itemize}
+	\itemsep-0.1em
+	\item If $x$ has not been queried to $\RO$, then the value of $\RO(x)$ is uniform. 
+	\item If adversary $\adve$ queries $x$ to $\RO$, the reduction can see this query and learn $x$. 
+\end{itemize}
+
+The first property says in particular that the output $\RO(x)$ is completely uniform to an observer until the observer queries $x$ to $\RO$ itself. The last property relate to proofs of reduction, which will be used throughout this thesis. 
+

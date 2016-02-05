@@ -1,0 +1,490 @@
+\chapter{Symmetric Subversion}
+\chaplab{symmetricSubversion}
+
+Here we define a cryptographic subversion theory for when we are allowed to use symmetric big brother keys instead of asymmetric keys. The technical modifications needed are few: we simply do not give the big brother key to the distinguisher in the detect game and the adversary in the security game (essentially). In \secref{bigBrother} we discussed that a successful reverse-engineering of a subverted device does not imply that it is possible to detect subversions of other devices. This is not the case in the symmetric model where disclosure of the big brother key would allow trivial detection of all devices subverted with the same big brother key. 
+
+The model presented in this chapter is directly inspired by \cite{DBLP:secSym}. To show that it translates successfully, we recover a result from \cite{DBLP:secSym} in \secref{recoverPreviousResult}.  The result states that all $\iv$-surfacing, probabilistic, stateless symmetric encryption schemes are prone to cryptographic subversion attacks. 
+
+It should be noted that the work of Bellare, Paterson and Rogaway \cite{DBLP:secSym} has undergone some critique lately \cite{JPB}. To our defence, the critique in the latter paper concerns the definition of subversion resilience and is tightly connected to the problems discussed in the last paragraph of \secref{scope}.
+
+The chapter starts by defining a symmetric big brother in \secref{symmetricBigBrother} and proceeds to define the properties of a cryptographic subversion in the symmetric case in \secref{symmetricSubversion}. As a final act, \secref{recoverPreviousResult} will describe the result mentioned above. 
+
+\section{Symmetric big brother}
+\seclab{symmetricBigBrother}
+
+We only present an interactive version of a symmetric big brother because this is what we will need later. It is equally easy to define a non-interactive symmetric big brother. 
+
+
+We must slightly modify \defref{interactiveBigBrother}. Namely, the big brother key generation algorithm $\bbgen$ must now output a symmetric key $\bbk$, the subverted device $\bbdev$ must take as input a symmetric key instead of a public key and the big brother recovery algorithm $\bbrec$ must as well take as input a symmetric key. Details are as follows.
+
+\begin{defn}
+\deflab{symmetricBigBrother}
+	A \textbf{symmetric big brother} for an interactive cryptographic game $\listcgame$ is a 3-tuple $(\bbgen,\bbdev, \bbrec)$ denoted by $\bb$, where
+	\begin{itemize}
+	\itemsep-0.1em
+		\item $\bbgen$ is a $\PPT$ algorithm that we call the \emph{symmetric big brother key generation} algorithm, which on input the security parameter $n$  and parameter $\params$ outputs a symmetric big brother key $\bbk\in\{0,1\}^*$ with length at least $n$. We write $\bbk\leftarrow \bbgen(1^n, \params)$. 
+		\item $\bbdev$ is a $\PPT$ party that we call the symmetric subversion of $\dev$. $\bbdev$ functions the same way as $\dev$ in its interaction with another party (i.e it must adhere to the same message schedules as $\dev$ and return a public and secret transcript) but in addition to the input given to $\dev$ it is also given the symmetric big brother key $\bbk\in\{0,1\}^*$. 
+		\item $\bbrec$ is a $\PPT$ party that we call the \textit{adversarial recovery algorithm}. $\bbrec$ functions like a $\PPT$ party $\party$ but apart from given $\params$ as input, it also receives the symmetric big brother key $\bbk$ as input to its return algorithm $\return_{\bbrec}$. The return function of $\bbrec$ outputs information $\delta\in\{0,1\}^*$. 
+	\end{itemize} 
+\end{defn}
+
+\section{Subversion in the symmetric case}
+\seclab{symmetricSubversion}
+
+We now aim to define what it means to subvert an interactive cryptographic game when using a symmetric key. Comments on the changes compared to the asymmetric case is given after the definition.
+
+\begin{defn}
+\deflab{symmetricSubversion}
+	Given a secure interactive cryptographic game $\inlistcgame$. A symmetric big brother $\listbb$ for $\cgame$ is a weak/strong symmetric $(t,K)$-subversion of $\cgame$ if 
+	\begin{enumerate}[1.]
+
+		\item Big brother can recover information: define recovery advantage as
+		\begin{align*} 
+			\adv_{\bb}^{\symrecgame}(\bbrec)\defeq \secf(n)\cdot \left\vert \prob{\true\leftarrow \symrecgame_{\bb}^{\bbrec}(n)} - \basep(n)\right\vert,
+		\end{align*}
+		where the probability is over randomness used in game $\symrecgame_{\bb}^{\adve}(n)$, which is defined in \figref{symRecSecGame}. $\bb$ recovers information if there exists $N\in\N$ such that
+		\begin{align*}
+			\adv_{\bb}^{\symrecgame}(\bbrec)>K
+		\end{align*}
+		for all $n>N$ and $\bbrec$ is a $\PPT$ party. 
+		\item  Detection is impossible: for a $\PPT$ distinguisher $\dist$, we define 
+		\begin{align*}
+		\adv_{\dev,\bbdev}^{\symnotationtypedetect}(\dist) \defeq 2\left\vert \prob{\true\leftarrow \symtypedetect{\dev}{\bbdev}{\dist}}-\frac{1}{2}\right\vert 
+		\end{align*}
+		for $\type\in\{\weakly,\strongly\}$ and probability is taken over the randomness used in the game $\symtypedetect{\dev}{\bbdev}{\dist}$ defined in \figref{symdetectgame}. A $\PPT$ distinguisher $\dist$ can not detect the subversion $\bb$ if there exists a negligible function $\negl$ such that
+		\begin{align*}
+			\adv_{\dev,\bbdev}^{\symnotationtypedetect}(\dist)\leq \negl(n),
+		\end{align*}
+		where $\dist$ is allowed to make $t$ oracle queries.
+		\begin{boxfigTwo}{Distinguish game for weak/strong symmetric subversion.}{symdetectgame}
+\begin{minipage}{0.45\textwidth}
+ 	%\vspace{1ex}
+    \smallskip
+	\begin{description}
+ 	\item[\underline{\textbf{Game} $\symweakdetect{\dev}{\bbdev}{\eve}$}] ~
+ 	
+ 	 	Run $\param(1^n)$\\
+ 		Let $\params$ be the initial state \\
+ 		$\bbk\leftarrow \bbgen(1^n,\params)$ \\
+ 		$b\unileft \{0,1\}$ \\
+ 		$\hat{b}\leftarrow \eve^{\oracle}$ \\
+ 		\Ret $\askequal{\hat{b}}{b}$
+
+	\item[\underline{$\oracle$}] ~
+	
+		If $b=0$: $\{$ Run $\dev$ with $\eve$ \\
+	    $(\ptrans,\strans)\leftarrow\return_{\dev}(\st_{\dev}) \}$ \\
+		If $b=1$:$\{$ Run $\bbdev(\bbk)$ with $\eve$ \\
+		$(\ptrans,\strans)\leftarrow\return_{\bbdev}(\st_{\bbdev}) \}$ \\
+		\Ret $\ptrans$
+		\smallskip
+  	\end{description}
+\end{minipage}
+    & 
+\begin{minipage}{0.45\textwidth}
+ 	%\vspace{1ex}
+    \smallskip
+	\begin{description}
+ 	\item[\underline{\textbf{Game} $\symstrongdetect{\dev}{\bbdev}{\user}$}] ~
+ 	
+ 	 	Run $\param(1^n)$ \\
+ 	 	Let $\params$ be the initial state \\
+ 		$\bbk\leftarrow \bbgen(1^n,\params)$ \\
+ 		$b\unileft \{0,1\}$ \\
+ 		$\hat{b}\leftarrow \user^{\oracle}$ \\
+ 		\Ret $\askequal{\hat{b}}{b}$
+
+	\item[\underline{$\oracle$}] ~
+	
+		If $b=0$: $\{$ Run $\dev$ with $\eve$ \\
+	    $(\ptrans,\strans)\leftarrow\return_{\dev}(\st_{\dev}) \}$ \\
+		If $b=1$:$\{$ Run $\bbdev(\bbk)$ with $\eve$ \\
+		$(\ptrans,\strans)\leftarrow\return_{\bbdev}(\st_{\bbdev}) \}$ \\
+		\Ret $(\ptrans,\strans)$
+		\smallskip
+  	\end{description}
+\end{minipage}
+     \\ \hline 
+	 $\eve$ is allowed to make $t$ queries to the oracle $\oracle$. &  $\user$ is allowed to make $t$ queries to the oracle $\oracle$ \\
+	  Device and $\eve$ start with initial state $\params$ for each query. & Device and $\user$ start with initial state $\params$ for each query.
+	 \\
+\end{boxfigTwo}
+		\item Preserve security: for every $\PPT$ adversary $\adve$ there exists a negligible function $\negl$ such that
+		\begin{align*}
+			\adv_{\bb}^{\symsecgame}(\adve) \leq \negl(n).
+		\end{align*}   
+		The left-hand side is defined as
+		\begin{align*}
+			\adv_{\bb}^{\symsecgame}(\adve) \defeq \secf(n)\cdot\left\vert \prob{\true\leftarrow\symsecgame_{\bb}^{\adve}(n)} - \basep(n)\right\vert,
+		\end{align*}
+		where the probability is over the game $\symsecgame_{\bb}^{\adve}(n)$ defined in \figref{symRecSecGame}.
+		\begin{boxfigTwo}{Recovery (left) and preservability (right) game for big brother $\bb$.}{symRecSecGame}
+\begin{minipage}{0.45\textwidth}
+ 	%\vspace{1ex}
+    \smallskip
+	\begin{description}
+	\item[\underline{\textbf{Game} $\symrecgame_{\bb}^{\adve}(n)$}] ~
+ 	
+ 		Run $\param(1^n)$ \\
+ 		Let $\params$ be the initial state \\
+ 		$\bbk\leftarrow \bbgen(1^n,\params)$ \\
+ 		Run $\bbdev(\bbk)$ with $\adve$ \\
+ 		$(\ptrans,\strans)\leftarrow \return_{\bbdev}(\st_{\bbdev})$ \\	
+ 		$\delta\leftarrow \return_{\adve}(\st_{\adve},\bbk)$ \\
+ 		$\bool \leftarrow \pred(\ptrans,\strans,\delta)$ \\
+		\Ret $\bool$
+		\smallskip
+  	\end{description}
+  	
+\end{minipage}
+    & 
+\begin{minipage}{0.45\textwidth}
+ 	%\vspace{1ex}
+    \smallskip
+	\begin{description}
+	\item[\underline{\textbf{Game} $\symsecgame_{\bb}^{\adve}(n)$}] ~
+ 	
+ 		Run $\param(1^n)$ \\
+ 		Let $\params$ be the initial state \\
+ 		$\bbk\leftarrow \bbgen(1^n,\params)$ \\
+ 		Run $\bbdev(\bbk)$ with $\adve$ \\
+ 		$(\ptrans,\strans)\leftarrow \return_{\bbdev}(\st_{\bbdev})$ \\	
+ 		$\delta\leftarrow \return_{\adve}(\st_{\adve})$ \\
+ 		$\bool \leftarrow \pred(\ptrans,\strans,\delta)$ \\
+ 		\Ret $\bool$ 
+		\smallskip
+  	\end{description}
+\end{minipage}
+\\ 
+\end{boxfigTwo}
+	\end{enumerate}
+$t$ is a polynomial in $n$ and $K\in(0,1]$.
+
+If (1) is true for arbitrary $t$ we call $\bb$ a $\weakly$/$\strongly$ $K$-subversion of $\cgame$ and we call $\bb$ a $\weakly$/$\strongly$ subversion of $\cgame$ if there exist some constant $K$ such that $\bb$ is a $\weakly$/$\strongly$ $K$-subversion. If properties 1, 2 and 3 are satisfied we call $\bb$ \emph{recoverable}, \emph{undetectable} and \emph{security preserving}. Property 1, 2 and 3 above are referred to as \emph{recoverability}, \emph{undetectability} and \emph{preservability}, respectively.
+\end{defn}
+
+Comparing the above definition to \defref{icgSubversion}, we report on the following changes:
+
+\noindent\textbf{Recovery game:} Instead of given a public key to $\adve$ and $\bbdev$, we give them a symmetric key (basically the only thing that changes is the notation used).
+
+\noindent\textbf{Detect game:} We do not give the big brother key to the distinguisher. 
+
+\noindent\textbf{Security game:} As in the detection game, we do not give the big brother key to the adversary $\adve$. This is the only difference between the $\symsecgame_{\bb}^{\adve}(n)$ and $\symrecgame_{\bb}^{\adve}(n)$.
+
+We now want to prove the same propositions as in \secref{subversion}. Specifically, prove that a strong subversion implies a weak subversion and that a secure interactive cryptographic game together with a strong undetectable subversion implies that the subversion is also preservable. 
+
+\begin{prop}
+\proplab{symstrongImplyWeak}
+Let $\inlistcgame$ be an interactive cryptographic game and assume $\listbb$ is a strong symmetric $(t,K)$-subversion of $\cgame$. Then $\bb$ is also a weak symmetric $(t,K)$-subversion of $\cgame$. 
+\end{prop}
+
+\begin{proof}
+It is enough to prove property (2) in \defref{symmetricSubversion}. Given a $\PPT$ eavesdropper $\eve$, we consider the game $\symweakdetect{\dev}{\bbdev}{\eve}$. We construct a user $\user$ such that
+\begin{align}
+\label{eq:9}
+	\adv_{\dev,\bbdev}^{\symstrongdetectplain}(\user) = \adv_{\dev,\bbdev}^{\symweakdetectplain}(\eve).
+\end{align} 
+Below we construct $\user$: in the description the oracle $\oracle$ is the oracle from $\symstrongdetect{\dev}{\bbdev}{\user}$.
+
+\vspace*{-.3cm}
+\begin{Algorithm}[]{7cm}
+\captionUser
+\caption{$\user$}
+\label{alg:symWeakStrong}
+\begin{algorithmic}[1]
+\Require $\params$ 
+\State Give $\params$ to $\eve$
+\State $\hat{b}\leftarrow\eve^{\oracle_{\eve}}$
+\State \Ret $\hat{b}$
+\Statex\hrulefill
+\end{algorithmic}
+\begin{algorithmic}[1]
+\Statex \underline{Device oracle: \textbf{$\oracle_{\eve}$} $i$'th query}
+\Statex
+\State Query the oracle $\oracle$ that starts an interaction with device $D$, which is either device $\dev$ or device $\bbdev$, and at the same time starts an interaction with $\eve$
+\State $\user$ acts as a proxy between the two interactions: messages received from $\eve$ are send to $D$, and messages received from $D$ are send to $\eve$
+\State When $\user$ in the end receives the public and secret transcripts from the interaction with $D$, send the public transcript to $\eve$
+\end{algorithmic}
+\end{Algorithm}
+
+Since $\eve$ must adhere to the same messages schedule in its interaction with $\user$ as $\user$ must in its interaction with $D$ there is consistency between the messages that are received and messages that are send from all three parties. It clear that $\user$ is a $\PPT$ party because $\eve$, $\dev$ and $\bbdev$ are. 
+
+As in the proof of \propref{interactivestrongImplyWeak} the equality \ref{eq:9} follows immediately because the messages that $\eve$ receives when used as a subroutine by $\user$ are the same messages as $\eve$ receives in the game $\symweakdetect{\dev}{\bbdev}{\eve}$.
+\end{proof}
+
+The proposition above follows in the same way as \propref{interactivestrongImplyWeak}. The same is true for the proposition below, that only requires small changes compared to \propref{interactiveRedundant}.
+
+\begin{prop}
+Let $\inlistcgame$ be an interactive cryptographic game and $\listbb$ a symmetric big brother for $\cgame$. If $\cgame$ is secure and $\bb$ is strongly undetectable, then $\bb$ also preserves security.
+\end{prop}
+
+\begin{proof}
+As in \secref{subversion}, we must prove that there exists a negligible function $\negl$ such that
+\begin{align*}
+	\adv_{\bb}^{\symsecgame}(\adve) \leq \negl(n).
+\end{align*}
+Our strategy follows the exact same strategy as in the proof of \propref{interactiveRedundant}. Instead of writing the same computations again, we simply just construct the user $\user$ and the modified game $\pneg{\symsecgame}_{\cgame}^{\adve}(n)$, which are both used in the proof. The computations and arguments are exactly the same as in the case of an interactive big brother using asymmetric keys.
+
+Let $\adve$ be a $\PPT$ adversary and consider the game $\symsecgame_{\bb}^{\adve}(n)$. We construct user $\user$ below: in the description $\oracle$ is the oracle from $\symstrongdetect{\dev}{\bbdev}{\user}$.
+
+\vspace*{-.3cm}
+\begin{Algorithm}[]{6cm}
+\captionUser
+\caption{$\user$}
+\label{alg:symRedundantUser}
+\begin{algorithmic}[1]
+\Require $\params$
+\State Give $\params$ to $\adve$
+\State Query $\oracle$ that starts an interaction between $\user$ and either $\dev$ or $\bbdev$, and $\user$ simultaneously start an interaction with $\adve$
+\State Let $\user$ act as a proxy
+\State $\delta \leftarrow \return_{\adve}(\st_{\adve})$
+\State $\bool \leftarrow \pred(\ptrans,\strans,\delta)$
+\If{$\bool = \true$}
+\State \Ret $1$
+\Else
+\State \Ret $0$
+\EndIf
+\end{algorithmic}
+\end{Algorithm} 
+
+Below we construct the modified security game $\pneg{\insecgame}_{\cgame}^{\adve}(n)$.
+
+\begin{boxfigGame}{Modified security game for a non-interactive cryptographic game $\cgame$}{inSecGameMod}
+  \begin{description}
+	\item[\underline{\textbf{Game} $\pneg{\insecgame}_{\cgame}^{\adve}(n)$}] ~
+ 	
+ 		Run $\param(1^n)$ \\
+ 		Let $\params$ be the initial state \\
+ 		$\bbk\leftarrow\bbgen(1^n,\params)$ \\
+		Run $\dev$ with $\adve$ \\
+ 		$\delta\leftarrow\return_{\adve}(\st_{\adve})$ \\
+ 		$(\ptrans,\strans)\leftarrow \return_{\dev}(\st_{\dev})$ \\
+ 		$\bool \leftarrow \pred(\ptrans,\strans,\delta)$ \\
+ 		\Ret $\bool$		
+  \end{description}
+\end{boxfigGame}
+
+In this case, it is even more obvious that the modified game and the original game have equal output distributions i.e.
+\begin{align*}
+	\prob{\false\leftarrow \insecgame_{\cgame}^{\adve}(n)} = \prob{\false \leftarrow \pneg{\insecgame}_{\cgame}^{\adve}(n)}.
+\end{align*}
+In the proof \propref{interactiveRedundant}, we had to define a new adversary $\adve'$ from $\adve$. That step is redundant in this case, since $\adve$ receives the same input in both $\pneg{\insecgame}_{\cgame}^{\adve}(n)$ and $\insecgame_{\cgame}^{\adve}(n)$.
+\end{proof}
+
+We could also give examples that shows that the two assumptions recoverability and undetectability can not be left out. But the examples from \secref{interactiveSubversion} does also apply in the case of symmetric cryptographic subversion. 
+
+\section{Recover previous result}
+\seclab{recoverPreviousResult}
+
+In this section, we describe a result from \citep{DBLP:secSym}, namely Theorem 1. We define an interactive cryptographic game that is secure when we consider a symmetric encryption scheme that has indistinguishable encryption in the presence of an eavesdropper. The cryptographic game will be standardless. 
+
+The symmetric encryption schemes being considered must satisfy some extra requirements compared to general symmetric encryption schemes: first, they must be both randomised and stateless; second, they must be $\iv$-surfacing. The last requirement is described more precisely below
+
+\begin{defn}
+Let $\spkcs = (\gen,\enc,\dec)$ be a symmetric encryption scheme that employ the use of an initialisation vector $\iv\in\{0,1\}^*$ (of some fixed length in n). We write $c\leftarrow\enc_{\key}(m;\iv)$. $\spkcs$ is $\iv$-surfacing if there exists an efficient algorithm $\f$ such that $\f(\enc_{\key}(m;\iv)) = \iv$ for all $\key,m$ and $\iv$. 
+\end{defn}
+
+The condition above says that $\f$ can recover the $\iv$ from the ciphertext. There exists many examples of $\iv$-surfacing symmetric encryption schemes: $\CBC$ flavoured schemes with random $\iv$ are probably the best known schemes. 
+
+Below we construct the interactive game $\cgame_{\sym}$ and prove that it is secure if the scheme considered is $\EAV$-secure. 
+
+\begin{thm}
+\thmlab{symsubvert}
+Let $\spkcs = (\gen,\enc,\dev)$ be a randomised, stateless and $\iv$-surfacing symmetric encryption scheme. Assume $\gen(1^n)$ on input $1^n$ outputs a uniform bit-string from $\{0,1\}^n$. If $\spkcs$ has indistinguishable encryptions under the presence of an eavesdropper then $\cgame_{\sym}$ defined in \figref{symEnc}, is a secure interactive cryptographic game. 
+\end{thm}
+
+\begin{comment}
+
+\begin{boxfigGame}{Interactive cryptographic game $\cgame_{\sym}$, which models a ?? game for an $\iv$-surfacing, randomised and stateless symmetric encryption scheme}{symGame}
+  \begin{description}
+
+ 	\item[\underline{$\dev$}] ~
+ 	
+ 		See \figref{symEncDev}. 
+
+	\item[\underline{$\pred(\ptrans,\strans,\sigma)$}] ~
+	
+		Parse: $\strans = (\cgroup,\order,\generator,b)$ \\
+		Parse: $\sigma = \hat{b}$ \\
+		If $(\hat{b} = b)$ \Ret $\true$ \\ 
+		Else \Ret $\false$
+		
+	\item[\underline{$(\basep(n), \secf(n)) \defeq \left(\frac{1}{2},2\right)$}]
+  \end{description}
+\end{boxfigGame}
+
+\end{comment}
+
+\begin{intGame}{Interactive cryptographic game $\cgame_{\sym}$.}{symEnc}
+\begin{align*}
+\begin{array}{lll}
+\underline{\pred(\ptrans,\strans,\sigma)} & \quad\basep(n) \defeq \frac{1}{2} & \\
+\quad\mbox{Parse: } \strans = (\cgroup,\order,\generator,b) & \quad\secf(n) \defeq 2 & \\
+\quad\mbox{Parse: } \sigma = \hat{b} \\
+\quad\mbox{If  } (\hat{b} = b) \mbox{ \Ret } \true \\ 
+\quad\mbox{Else \Ret } \false \\
+\hline \party &  & \dev \\ 
+\hline \I: \, \bot &  & \I:\,\bot \\ 
+\mbox{Choose } m_0,m_1\in\{0,1\}^n & & \\
+m_0 \neq m_1,\,\vert m_0\vert = \vert m_1\vert & & \\
+ & \longrightar{(m_0,m_1)}{3} & \\
+ & & \key\unileft\{0,1\}^n \\
+ & & \iv\unileft\{0,1\}^n \\
+ & & b\unileft\{0,1\} \\
+ & & c \leftarrow \enc_{\key}(m_b;\iv) \\
+ & \longleftar{c}{3} & \\
+ & & \ptrans \defeq c \\
+ & & \strans \defeq b \\
+\Ret \hat{b} & & \Ret (\ptrans,\strans) \\
+\end{array}   
+\end{align*}
+\end{intGame}
+
+\begin{proof}
+It is obvious that the only difference between the game defining security of $\cgame_{\sym}$ and the game defining $\EAV$-security of $\spkcs$ is syntactic. Hence, since $\spkcs$ is assumed $\EAV$-secure the interactive cryptographic game $\cgame_{\sym}$ is also secure. 
+\end{proof}
+
+Next we present a strong subversion of $\cgame_{\sym}$. The idea is to produce the $\iv$ from the key $\key$ by encrypting $\key$ using a block cipher under the big brother symmetric key $\bbk$. In the subversion we utilise a block cipher $\EncBlock$ that is assumed to be a $\PRF$ and we assume that the initialisation vector $\iv$ and key $\key$ has the same length as the block size. 
+
+\begin{thm}
+Let $\EncBlock\,:\, \{0,1\}^n\times\{0,1\}^n\leftarrow \{0,1\}^n$ be a block cipher with block size $n$ and key-space $\{0,1\}^n$. Assume $\EncBlock$ is a $\PRF$. Then the big brother $\bb_{\sym}$ defined in \figref{symBigBrother}, strongly subverts $\cgame_{\sym}$. 
+\end{thm}
+
+\begin{intGame}{Big brother $\bbdev_{\sym}$ for $\cgame_{\sym}$}{symBigBrother}
+\begin{align*}
+\begin{array}{lll}
+\underline{\bbgen(1^n)} & \underline{\return_{\bbrec}(\ptrans,\bbk)} &  \quad\mbox{$\bbrec$ can choose} \\
+\quad\bbk\unileft\{0,1\}^n & \quad\mbox{Parse: } \ptrans = c & \quad\mbox{messages $m_0$ and $m_1$} \\
+\quad\mbox{\Ret } \bbk	&	\quad\hat{\iv} \defeq \f(c) & \quad\mbox{with no special} \\
+	&	\quad\hat{\key} \leftarrow \EncBlock{\bbk}(\iv) & \quad\mbox{structure}\\
+	&	\quad\hat{m} \defeq \dec_{\key}(c;\iv) & \\
+	&	\quad\mbox{If } \hat{m} = m_0 \mbox{ \Ret } 0 &\\
+	&	\quad\mbox{Else \Ret } 1 & \\
+\hline \party &  & \bbdev \\ 
+\hline \I: \, \bot &  & \I:\,\bbk \\
+\mbox{Choose } m_0,m_1\in\{0,1\}^n & & \\
+\vert m_0\vert = \vert m_1\vert & & \\
+ & \longrightar{(m_0,m_1)}{3} & \\
+ & & \key\unileft\{0,1\}^n \\
+ & & \iv \leftarrow \Enc{\bbk}(\key) \\
+ & & b\unileft\{0,1\} \\
+ & & c \leftarrow \enc_{\key}(m_b;\iv) \\
+ & \longleftar{c}{3} & \\
+ & & \ptrans \defeq c \\
+ & & \strans \defeq b \\
+\Ret \hat{b} & & \Ret (\ptrans,\strans) \\
+\end{array}   
+\end{align*}
+\end{intGame}
+
+\begin{proof}
+We follow the usual process of first proving that $\bb_{\sym}$ is recoverable and, afterwards, that $\bb_{\sym}$ is undetectable. \\
+
+\noindent\textbf{$\bb_{\sym}$ is recoverable} 
+
+Since $\f$ and $\Enc{\key}$ are $\PPT$ algorithms, $\bbrec$ is a $\PPT$ party. We will prove
+\begin{align}
+\label{eq:7}
+	\adv_{\bb_{\sym}}^{\symrecgame}(\bbrec) = 1,
+\end{align}
+which proves recoverability. The recovery game $\symrecgame_{\bb_{\sym}}^{\bbrec}(n)$ starts by $\bbgen$ computing a symmetric key $\bbk\in\{0,1\}^n$. The interaction between $\bbrec$ and $\bbdev$ then happens where $\bbrec$ choose messages $m_0$ and $m_1$ (with no special structure or dependence). After the interaction between $\bbrec$ and $\bbdev$, we have: the symmetric key $\key$, initialisation vector $\iv = \Enc{\bbk}(\key)$ and ciphertext $c = \enc_{\key}(m_b;\iv)$. The return algorithm of $\bbrec$ then first computes $\hat{\iv}= \f(c)$. By the property of $\f$, we have $\hat{\iv}=\iv$. Then $\hat{\key} \leftarrow \Enc{\bbk}(\iv)$, where again $\hat{\key} = \key$. $\return_{\bbrec}$ proceeds by computing $\hat{m} = \dev_{\key}(c;\iv)$. We have $\hat{m} = m_b$ with probability 1 because of perfect correctness. The last conditional branch performed by $\bbrec$ implies \ref{eq:7}. \\
+
+\noindent\textbf{$\bb_{\sym}$ is undetectable}
+
+To prove strong undetectability, we construct a distinguisher $\dist$ that tries to distinguish between $\EncBlock$ and a random function $f$, thereby attacking the $\PRF$ assumption. Given a $\PPT$ user $\user$. Consider the game $\symstrongdetect{\dev}{\bbdev}{\user}$. Below we construct $\dist$ that uses $\user$ as a subroutine: in the description $\dist$ has access to an oracle $\oracle_{\dist}(\key_i)$, which takes a bit-string $\key_i\in\{0,1\}^n$ as input and outputs either $\iv_i\defeq\Enc{\key}(\key_i)$ for $\key\unileft\{0,1\}^n$ or $\iv_i \defeq f(\key_i)$ for $f\unileft\func_n$. 
+
+%\vspace*{-.3cm}
+\begin{Algorithm}[]{7cm}
+\captionDistinguisher
+\caption{$\dist$}
+\label{alg:symdistinguisher}
+\begin{algorithmic}[1] 
+\State $\key_1,\key_2,\ldots,\key_t\unileft\{0,1\}^n$
+\State Query: $\iv_i\leftarrow\oracle_{\dist}(k_i)$ for $i=1,2,\ldots,t$
+\State $\hat{b}\leftarrow\user^{\oracle_{\user}(m_0,m_1)}$
+\If{$\hat{b} = 0$}
+\State \Ret $\true$
+\ElsIf{$\hat{b} = 1$}
+\State \Ret $\false$
+\EndIf
+\Statex\hrulefill
+\end{algorithmic}
+\begin{algorithmic}[1]
+\Statex \underline{Device oracle: \textbf{$\oracle_{\user}(m_0,m_1)$} $i$'th query}
+\Statex
+\State $b'\unileft\{0,1\}$
+\State $c\leftarrow\enc_{k_i}(m_{b'};\iv_i)$
+\State $\ptrans\defeq c$
+\State $\strans\defeq b'$
+\State \Ret $(\ptrans,\strans)$
+\end{algorithmic}
+\end{Algorithm}
+
+Because $\user$ is a $\PPT$ user $\dist$ is a $\PPT$ distinguisher. We may assume that $\user$ makes exactly $t=t(n)$ queries to the oracle $\oracle_{\user}$. In the execution of Game $\symstrongdetect{\dev}{\bbdev}{\user}$, we define two events:
+\begin{align*}
+	\rep\quad &: \quad \mbox{The event that a repetition occurs when sampling the keys $\key$ in the queries to $\oracle$.} \\
+	\success\quad &: \quad \mbox{The event that $b = \hat{b}$.} 
+\end{align*}
+The event $\success$ is equivalent to $\user$ winning the game $\symstrongdetect{\dev}{\bbdev}{\user}$. Using the two events defined above, we can do the following computations
+\begin{align}
+	\adv_{\dev,\bbdev}^{\symstrongdetectplain}(\user) &= 2\cdot\left\vert \prob{\true\leftarrow\symstrongdetect{\dev}{\bbdev}{\user}} - \frac{1}{2}\right\vert \nonumber \\
+	& = 2\cdot\left\vert \prob{\success} - \frac{1}{2}\right\vert \nonumber\\
+	& = 2\cdot \left\vert \prob{\success\pand \rep}+\prob{\success\pand \pneg{\rep}} - \frac{1}{2} \right\vert \nonumber\\
+	& \leq 2\cdot \left\vert \prob{\success\pand \pneg{\rep}} - \frac{1}{2}\right\vert + 2\cdot\prob{\success\pand \rep} \nonumber\\
+\label{eq:7_1}	& \leq 2\cdot \left\vert \prob{\success\pand \pneg{\rep}} - \frac{1}{2}\right\vert + 2\cdot\prob{\rep}.
+\end{align}
+The first inequality is simply the triangle inequality. We now only consider the first part of the summation in equation \ref{eq:7_1}. In the following we use that the events $\pneg{\rep}$ and $b = 0$ (or $b = 1$) are independent.
+\begin{align}
+	2\cdot \left\vert \prob{\success\pand \pneg{\rep}} - \frac{1}{2}\right\vert & = 2\cdot\left\vert \prob{\success\pand \pneg{\rep}\pand(b=0)} + \prob{\success\pand\pneg{\rep}\pand(b=1)} - \frac{1}{2}\right\vert \nonumber \\
+	& = 2\cdot\bigg\vert \prob{b=0\pand\pneg{\rep}}\cdot \condprob{\success}{\pneg{\rep}\pand(b=0)} \nonumber \\
+	& \qquad + \prob{b=1\pand\pneg{\rep}}\cdot \condprob{\success}{\pneg{\rep}\pand(b=1)} - \frac{1}{2} \bigg\vert \nonumber \\
+	& = 2\cdot\bigg\vert \prob{b=0}\cdot\prob{\pneg{\rep}}\cdot \condprob{\success}{\pneg{\rep}\pand(b=0)} \nonumber \\
+	& \qquad + \prob{b=1}\cdot\prob{\pneg{\rep}}\cdot \condprob{\success}{\pneg{\rep}\pand(b=1)} - \frac{1}{2} \bigg\vert \nonumber \\ 
+	& = 2\cdot\bigg\vert \frac{1}{2}\cdot\prob{\pneg{\rep}}\cdot \condprob{\success}{\pneg{\rep}\pand(b=0)} \nonumber \\
+	& \qquad + \frac{1}{2}\cdot\prob{\pneg{\rep}}\cdot \condprob{\success}{\pneg{\rep}\pand(b=1)} - \frac{1}{2} \bigg\vert \nonumber \\
+	& = \bigg\vert \prob{\pneg{\rep}}\cdot \condprob{\success}{\pneg{\rep}\pand(b=0)} + \nonumber \\
+\label{eq:7_2}	& \qquad \prob{\pneg{\rep}}\cdot\condprob{\success}{\pneg{\rep}\pand(b=1)} - 1 \bigg\vert.
+\end{align}
+
+Consider the first conditional probability that conditions on $\pneg{\rep}$ and $b = 0$. That is, we consider the event where $\user$ outputs $0$ with no repetitions of keys. Then the view of $\user$ when used as a subroutine by $\dist$ is distributed identically as the view from $\user$ in the game $\symstrongdetect{\dev}{\bbdev}{\dist}$. Since $\user$ outputs $\hat{b} = 0$ if and only if $\dist$ outputs $\true$ (both conditioned on $\pneg{\rep}$) when queries to $\oracle_{\dist}$ return values computed by $\EncBlock$, we have
+\begin{align*}
+	\condprob{\success}{\pneg{\rep}\pand(b=0)} = \condprobb{\true\leftarrow\dist^{\Enc{\key}(\cdot)}(n)}{\pneg{\rep}}{\key\unileft\{0,1\}^n}.
+\end{align*}
+
+Note that the event $\pneg{\rep}$ is also well-defined on the right-hand side (i.e the values $\key_1,\key_2,\ldots,\key_t$ queried by $\dist$ are distinct) and that the key used by $\EncBlock$ is a uniform bit-string from $\{0,1\}^n$, which matches the generation of the big brother secret key $\bbk$. Consider now the second conditional probability in equation \ref{eq:7_2} that conditions on $\pneg{\rep}$ and $b = 1$. Using the same arguments as before, we get
+\begin{align*}
+	\condprob{\success}{\pneg{\rep}\pand(b=1)} = \condprobb{\false\leftarrow\dist^{f(\cdot)}(n)}{\pneg{\rep}}{f\unileft\func_n},
+\end{align*}
+where we noticed that $\user$ outputs $\hat{b} = 1$ if and only if $\dist$ outputs $\false$. Continuing from equation \ref{eq:7_2}, we obtain
+\begin{align}
+2\cdot \left\vert \prob{\success\pand \pneg{\rep}} - \frac{1}{2}\right\vert & = \bigg\vert \prob{\pneg{\rep}}\cdot\condprobb{\true\leftarrow\dist^{\Enc{\key}(\cdot)}(n)}{\pneg{\rep}}{\key\unileft\{0,1\}^n} \nonumber \\
+	& \qquad + \prob{\pneg{\rep}}\cdot\condprobb{\false\leftarrow\dist^{f(\cdot)}(n)}{\pneg{\rep}}{f\unileft\func_n} - 1 \bigg\vert \nonumber \\
+	& = \bigg\vert \prob{\pneg{\rep}}\cdot\condprobb{\true\leftarrow\dist^{\Enc{\key}(\cdot)}(n)}{\pneg{\rep}}{\key\unileft\{0,1\}^n} \nonumber \\
+	& \qquad + \prob{\pneg{\rep}}\cdot\left(1-\condprobb{\true\leftarrow\dist^{f(\cdot)}(n)}{\pneg{\rep}}{f\unileft\func_n}\right) - 1 \bigg\vert \nonumber \\
+	& = \bigg\vert \prob{\pneg{\rep}}\cdot\condprobb{\true\leftarrow\dist^{\Enc{\key}(\cdot)}(n)}{\pneg{\rep}}{\key\unileft\{0,1\}^n} \nonumber \\ 
+	& \qquad - \prob{\pneg{\rep}}\cdot\condprobb{\true\leftarrow\dist^{f(\cdot)}(n)}{\pneg{\rep}}{f\unileft\func_n} +\left(\prob{\pneg{\rep}} - 1\right) \bigg\vert \nonumber \\
+	& \leq \bigg\vert \prob{\pneg{\rep}}\cdot\condprobb{\true\leftarrow\dist^{\Enc{\key}(\cdot)}(n)}{\pneg{\rep}}{\key\unileft\{0,1\}^n} \nonumber \\ 
+	& \qquad - \prob{\pneg{\rep}}\cdot\condprobb{\true\leftarrow\dist^{f(\cdot)}(n)}{\pneg{\rep}}{f\unileft\func_n} \bigg\vert + \bigg\vert \prob{\pneg{\rep}} - 1 \bigg\vert \nonumber \\
+	& = \prob{\pneg{\rep}}\cdot\bigg\vert \condprobb{\true\leftarrow\dist^{\Enc{\key}(\cdot)}(n)}{\pneg{\rep}}{\key\unileft\{0,1\}^n} \nonumber \\
+	& \qquad - \condprobb{\true\leftarrow\dist^{f(\cdot)}(n)}{\pneg{\rep}}{f\unileft\func_n} \bigg\vert + 1 - \prob{\pneg{\rep}} \nonumber \\
+	& \leq \bigg\vert \condprobb{\true\leftarrow\dist^{\Enc{\key}(\cdot)}(n)}{\pneg{\rep}}{\key\unileft\{0,1\}^n} - \condprobb{\true\leftarrow\dist^{f(\cdot)}(n)}{\pneg{\rep}}{f\unileft\func_n} \bigg\vert \nonumber \\
+\label{eq:7_3}	& \qquad  + \prob{\rep} 
+\end{align}
+
+Because $\EncBlock$ is assumed to be a $\PRF$ and $\dist$ is a $\PPT$ algorithm there exists a negligible function $\negl$ such that 
+\begin{align}
+\label{eq:7_4}
+	\bigg\vert \condprobb{\true\leftarrow\dist^{\Enc{\key}(\cdot)}(n)}{\pneg{\rep}}{\key\unileft\{0,1\}^n} - \condprobb{\true\leftarrow\dist^{f(\cdot)}(n)}{\pneg{\rep}}{f\unileft\func_n} \bigg\vert\leq \negl(n).
+\end{align}
+
+Combining equations \ref{eq:7_1}, \ref{eq:7_3} and \ref{eq:7_4}, we get
+\begin{align*}
+	\adv_{\dev,\bbdev}^{\symstrongdetectplain}(\user) \leq \negl(n) + 3\cdot \prob{\rep} \leq \negl(n) + 3\frac{t^2}{2^{n+1}} \leq \negl'(n),
+\end{align*}
+
+where $\negl'(n)\defeq \negl(n) + 3\frac{t^2}{2^{n+1}}$ is negligible because $t$ is a polynomial in $n$. 
+
+\end{proof}
+
+In the very last part of the proof of \thmref{symsubvert}, we used the inequality $\prob{\rep}\leq \frac{t^2}{2\cdot 2^n}$, which is just an upper bound of the probability of a collision between $t$ independent uniformly chosen values from a set of size $2^n$. 
+

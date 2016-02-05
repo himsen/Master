@@ -1,0 +1,66 @@
+\documentclass[a4paper,10pt,twoside]{memoir}
+%\includeonly{Preamble,Cha1EllipticCurves} %,draft if we dont want pictures. 
+% Preamble og styles
+\include{Preamble}
+\include{commands}
+
+% \Author{}
+%\title{Cryptology against Mass Surveillance}
+
+ %Dokumentet starter
+\begin{document}
+
+\chapterstyle{burner}
+
+% Forsideindhold starter
+\frontmatter
+
+% Forside
+\begin{titlingpage}
+\include{Frontpage}
+\end{titlingpage}
+
+% Abstract
+\include{Abstract}
+\include{Resume}
+
+% Acknowledgements
+\include{Acknowledgements}
+
+% Inholdsfortegnelse og figureliste
+\begin{tableofcontents}*
+\end{tableofcontents}
+
+%\begin{listoffigures}*
+%\addcontentsline{toc}{chapter}{Figurer}
+%\end{listoffigures}
+
+% Hovedindhold starter
+\mainmatter
+\pagestyle{ruled}
+%Introduction
+\include{Cha1Introduction}
+%Preliminaries 
+\include{Cha2}
+
+\include{Cha3}
+\include{Cha4}
+\include{Cha5}
+\include{Cha6}
+\include{Cha7}
+%\include{Cha8}
+%\include{Cha9}
+%Conclusion
+\include{Conclusion}
+\appendix
+%\include{AppA}
+
+\backmatter
+
+%\nocite{cryptoeprint:2008:218}
+\bibliographystyle{plain}
+\bibliography{Master}
+
+\end{document}
+
+

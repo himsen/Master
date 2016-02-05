@@ -1,0 +1,175 @@
+\chapter{Public-Key Encryption Subversion}
+\chaplab{publicKeyEncryptionSubversion}
+
+In this chapter we subvert cryptographic games that relates to public-key encryption. In particular, we will consider the case of chosen-ciphertext security games in relation to the $\elGamal$ public-key encryption scheme. 
+
+The section in this chapter contains a subversion of the $\elGamal$ public-key encryption scheme in the $\CPA$ security game. To construct the subversion, we abuse the fact that the $\elGamal$ public-key encryption scheme surfaces a $\CDH$ instance. 
+
+\begin{comment}
+the first section, we construct a subversion of the $\elGamal$ encryption scheme in the $\CPA$ security game. In the last section, we elaborate on the idea used and construct a general subversion for public-key encryptions schemes that (informally) surfaces a $\CDH$ instance. 
+\end{comment}
+
+\section{El-Gamal subversion}
+
+We present a subversion of $\elGamal$ in the $\CPA$ security game. On a conceptual plane the subversions shows that if the $\elGamal$ encryption algorithm has access to the private key during encryption, then the $\elGamal$ public-key encryption scheme can be subverted. Having access to the private key is not the usual scenario of public-key encryption but if this situation occurs, you are doomed. 
+
+The subversion of $\elGamal$ works by recovering a $\CDH$ instance after an encryption. First we present the interactive cryptographic game.
+
+\begin{thm}
+\thmlab{elGamalSecure}
+	Let $\groupgen(1^n)$ be a polynomial-time algorithm that on input $1^n$ outputs a cyclic group $\cgroup$ of prime order $q$, $\vert q\vert = n$ and generator $g$. The interactive cryptographic game $\cgame_{\elGamal}$ defined in \figref{elGamal} is secure (relative to $\groupgen$) when the $\DDH$ problem is hard relative to $\groupgen$. 
+\end{thm}
+
+Note that, we do not consider the secret key $\sk$ as part of the secret transcript $\strans$. \remref{skNotInTrans} elaborate on this assumption. 
+
+\begin{intGame}{Interactive cryptographic game $\cgame_{\elGamal}$.}{elGamal}
+\begin{align*}
+\begin{array}{lll}
+\underline{\param(1^n)} & \underline{\pred(\ptrans,\strans,\sigma)} & \quad\basep(n)\defeq \frac{1}{2} \\
+\quad(\cgroup,\order,\generator)\leftarrow\groupgen(1^n) & \quad\mbox{Parse: } \strans = (\cgroup,\order,\generator,b) & \quad\secf(n)\defeq 2 \\
+\quad\params \defeq (\cgroup,q,g) & \quad\mbox{Parse: } \sigma = \hat{b} & \\
+\quad\mbox{\Ret } \params & \quad\mbox{If } (\hat{b} = b) \mbox{ \Ret } \true & \\
+ & \quad\mbox{Else \Ret } \false & \\
+\hline \party &  & \dev_{\elGamal} \\ 
+\hline \I: \, \params &  & \I:\,\params \\ 
+ &  & s\leftarrow\Zq,\: h\defeq g^s \\
+ & & \pk \defeq (\cgroup,\order,\generator,h),\, \sk \defeq (\cgroup,\order,\generator,s) \\
+ & \longleftar{\pk}{3} &  \\
+\mbox{Choose } m_0,m_1\in\cgroup & & \\
+\vert m_0\vert = \vert m_1\vert & & \\
+ & \longrightar{(m_0,m_1)}{3} & \\
+ & & b\unileft\{0,1\} \\
+ & & y \unileft\Zq \\
+ & & c \defeq (g^y, h^y\cdot m_b) \\
+ & \longleftar{c}{3} & \\
+ & & \ptrans \defeq (\cgroup,\order,\generator,\pk,c) \\
+ & & \strans \defeq (\cgroup,\order,\generator,b) \\
+\Ret \hat{b} & & \Ret (\ptrans,\strans) \\
+\end{array}   
+\end{align*}
+\end{intGame}
+
+\begin{proof}
+Let $\adve$ be a $\PPT$ adversary and consider the game $\insecgame_{\cgame}^{\adve}(n)$. It is clear that the adversary $\adve$ is successful if and only if $\adve$ can guess the bit $b$ knowing only the public key $\pk$ and one ciphertext $c$, which is the encryption of $m_b$. If follows that security of $\cgame$ is equivalent to proving that the $\elGamal$ public-key encryption scheme is $\CPA$-secure. Since the $\DDH$ problem is assumed to be hard relative to $\groupgen$, security of $\cgame_{\elGamal}$ follows from \propref{elGamalCPA}. 
+\end{proof}
+
+We proceed by presenting a big brother that strongly subverts $\cgame_{\elGamal}$. Having already established the $\CDH$ subversion in \secref{computationalDiffieHellmanSubversion} it should be obvious how we would construct such a big brother. The transcripts produced by $\dev_{\CDH}$ in $\cgame_{\CDH}$ are almost identical to the transcripts produced by $\dev$ in $\cgame$ but with the twist that $\cgame_{\elGamal}$ modifies the $\CDH$ instance by multiplying a message on one element of the instance. It turns out that this does not give much trouble. 
+
+\begin{thm}
+\thmlab{elGamalsubvert}
+The big brother adversary $\bb_{\elGamal}$ defined in \figref{elGamalBigBrother}, strongly subverts $\cgame_{\elGamal}$ if the $\DDH$ problem is hard relative to $\groupgen$.
+\end{thm}
+
+\begin{intGame}{Big brother $\bb_{\elGamal}$ of $\cgame_{\elGamal}$.}{elGamalBigBrother}
+\begin{align*}
+\begin{array}{lll}
+\underline{\bbgen(1^n,\params)} & \underline{\return_{\bbrec}(\bbsk,\ptrans)} & \quad\mbox{$\bbrec$ can choose} \\
+\quad\mbox{Parse: } \params = (\cgroup,\order,\generator) & \quad\mbox{Parse: } \ptrans = (\cgroup,\order,\generator,h,c) & \quad\mbox{messages $m_0$ and $m_1$} \\
+\quad s_{\bb}\unileft\Zq & \quad\mbox{Parse: } \bbsk = (\cgroup,\order,\generator,s_{\bb}) & \quad\mbox{with no special} \\
+\quad h_{\bb} \defeq g^{s_{\bb}} & \quad\mbox{Parse: } c = (g^y,h^y\cdot m_b) & \quad\mbox{structure} \\
+\quad \bbpk \defeq (\cgroup,\order,\generator,h_{\bb}) & \quad\hat{\eta}\defeq h^{-s_{\bb}}h &  \\
+\quad \bbsk \defeq (\cgroup,\order,\generator,s_{\bb}) & \quad \hat{y} \defeq \RO(\eta) & \\
+\quad\mbox{\Ret } (\bbpk,\bbsk) & \quad \hat{m} \defeq \left(h^{\hat{y}}\right)^{-1}\cdot h^y\cdot m_b & \\
+ & \quad\mbox{If } \hat{m} = m_0 \mbox{ \Ret } 0 & \\
+ & \quad\mbox{Else \Ret } 1 & \\
+\hline \party &  & \bbdev_{\elGamal} \\ 
+\hline \I: \, \params &  & \I:\,(\params,\bbpk) \\ 
+ &  & s\leftarrow\Zq,\: h\defeq g^s \\
+ & & \pk \defeq (\cgroup,\order,\generator,h),\, \sk \defeq (\cgroup,\order,\generator,s) \\
+ & \longleftar{\pk}{3} &  \\
+\mbox{Choose } m_0,m_1\in\cgroup & & \\
+\vert m_0\vert = \vert m_1\vert & & \\
+ & \longrightar{(m_0,m_1)}{3} & \\
+ & & b\unileft\{0,1\} \\
+ & & \eta \defeq h_{\bb}^{-s}\cdot h,\, y \defeq \RO(\eta) \\
+ & & c \defeq (g^y, h^y\cdot m_b) \\
+ & \longleftar{c}{3} & \\
+ & & \ptrans \defeq (\cgroup,\order,\generator,\pk,c) \\
+ & & \strans \defeq (\cgroup,\order,\generator,b) \\
+\Ret \hat{b} & & \Ret (\ptrans,\strans) \\
+\end{array} 
+\end{align*}
+\end{intGame}
+
+\begin{proof}
+We first prove that $\bb_{\elGamal}$ is recoverable and afterwards that $\bb_{\elGamal}$ is strongly undetectable. The first part is a straightforward symbol game, where one just have to check that the computation by $\bbrec$ is actually computing the correct bit $b$. The second part is a reduction to strong undetectability of $\bb_{\CDH}$. \\
+
+\noindent\textbf{$\bb_{\elGamal}$ is recoverable} 
+
+It is obvious that $\bbrec$ is a $\PPT$ party. We will check that $\hat{b} = b$ happens with probability 1, which implies
+\begin{align*}
+	\adv_{\bb_{\elGamal}}^{\insecgame}(\bbrec) = 1. 
+\end{align*}
+After running the interaction between $\bbrec$ and $\bbdev_{\elGamal}$ and the start of the game $\inrecgame_{\bb}^{\adve}(n)$, we have $\pk = g^s$, $\bbpk = h_{\bb}^{s_{\bb}}$, $c = (g^y,h\cdot m_b)$, $\eta = h_{\bb}^{-s}h$ and $y = \RO(\eta)$. The return function $\return_{\bbrec}$ then computes
+\begin{align*}
+	\hat{\eta} &= h^{-s_{\bb}}h = g^{-ss_{\bb}}h = h_{\bb}^{-s}h = \eta, \\
+	\hat{y} &= \RO(\hat{\eta}) = \RO(\eta) = y, \\
+	\hat{m} &= (h^{\hat{y}})^{-1} h^y m_b = m_b. 
+\end{align*} 
+That is, $\return_{\bbrec}$ will output $\hat{b} = b$ with non-negligible probability. \\
+
+\newpage
+\noindent\textbf{$\bb_{\elGamal}$ is undetectable}
+
+Let $\user_{\elGamal}$ be a $\PPT$ user trying to distinguish $\dev_{\elGamal}$ and $\bbdev_{\elGamal}$ in Game \\$\instrongdetect{\dev_{\elGamal}}{\bbdev_{\elGamal}}{\user}$. We construct a reduction $\user_{\CDH}$ to strong undetectability of $\bb_{\CDH}$, using $\user_{\elGamal}$ as a subroutine, such that 
+\begin{align}
+\label{eq:5}
+	\adv_{\dev_{\elGamal},\bbdev_{\elGamal}}^{\instrongdetectplain}(\user_{\elGamal}) = \adv_{\dev,\bbdev}^{\strongdetectplain}(\user_{\CDH}).
+\end{align}
+where $\dev$ and $\bbdev$ are from $\cgame_{\CDH}$ and $\bb_{\CDH}$ respectively (saving the subscripts). The messages $\user_{\elGamal}$ expects to see are the public key $\pk$ and encryptions of either $m_0$ or $m_1$, where $m_0$ and $m_1$ are chosen by $\user_{\elGamal}$ before each encryption. We will emulate these encryptions using the messages $\user_{\CDH}$ receives from its oracle in Game $\strongdetect{\dev_{\CDH}}{\bbdev_{\CDH}}{\user_{\CDH}}$.
+
+Consider an answer to a query by $\user_{\CDH}$ in the game $\strongdetect{\dev_{\CDH}}{\bbdev_{\CDH}}{\user_{\CDH}}$: $\ptrans=(g^x,g^y)$ and $\strans=g^{xy}$. We can start by given $\pk = g^x$ to $\user_{\elGamal}$ who then responds with messages $m_0,m_1$ ($\user_{\CDH}$ is playing the role of the challenger (device) in $\instrongdetect{\dev}{\bbdev}{\user_{\elGamal}}$). We then have to construct a response to $\user_{\elGamal}$, which should be the $\elGamal$ encryption of $m_b$ under the public key $g^x$ and ephemeral key $g^y$. We can do this because the secret transcript $\strans$ (which $\user_{\CDH}$ receives because we consider strong undetectability) contains the element $g^{xy}$. The simple computation $g^{xy}\cdot m_b$ will compute the encryption that is needed. A detailed description of $\user_{\CDH}$ is given below: in the description $\oracle_{\CDH}$ and $\RO_{\CDH}$ are the, respectively, device oracle and random oracle in Game $\strongdetect{\dev_{\CDH}}{\bbdev_{\CDH}}{\user_{\CDH}}$; $\oracle_{\elGamal}$ and $\RO_{\elGamal}$ emulates, respectively, device oracle and random oracle in the game $\instrongdetect{\dev}{\bbdev}{\user_{\elGamal}}$.
+
+\vspace*{-.3cm}
+\begin{Algorithm}[]{6cm}
+\captionUser
+\caption{$\user_{\CDH}$}
+\label{alg:elGamal1}
+\begin{algorithmic}[1]
+\Require $(\params,\bbpk)$ 
+\State Give $(\params,\bbpk)$ to $\user_{\elGamal}$
+\State $\hat{b} \leftarrow \user_{\elGamal}^{\oracle_{\elGamal}}$
+\State \Ret $\hat{b}$
+\Statex\hrulefill
+\end{algorithmic}
+\begin{algorithmic}[1]
+\Statex \underline{Device oracle: \textbf{$\oracle_{\elGamal}$}}
+\Statex
+\State Query: $(\ptrans^{\CDH},\strans^{\CDH})\leftarrow \oracle_{\CDH}$
+\State Parse: $\ptrans^{\CDH} = (g^x,g^y)$, $\strans^{\CDH} = g^{xy}$
+\State $\pk \defeq g^x$
+\State Send $\pk$ to $\user_{\elGamal}$
+\State Receive $(m_0,m_1)\leftarrow \user_{\elGamal}$
+\State $b'\unileft\{0,1\}$
+\State $c \defeq (g^y,g^{xy}\cdot m_{b'})$
+\State Send $c$ to $\user_{\elGamal}$
+\State $\ptrans \defeq (\pk,c)$, $\strans \defeq b'$
+\State \Ret $(\ptrans,\strans)$
+\end{algorithmic}
+\begin{algorithmic}[1]
+\Statex \underline{Random oracle: \textbf{$\RO_{\elGamal}(\lambda)$}}
+\Statex
+\State Query: $z\leftarrow\RO_{\CDH}(\lambda)$
+\State \Ret $z$
+\end{algorithmic}
+\end{Algorithm}
+
+We now argue that the view of $\user_{\elGamal}$ when used as a subroutine by $\user_{\CDH}$, is identical to the view in the game $\instrongdetect{\dev}{\bbdev}{\user_{\elGamal}}$. We consider two cases: $b = 0$ and $b = 1$. In both cases the parameters $\params = (\cgroup,\order,\generator)$ given to $\user_{\elGamal}$ is distributed identically in both views. If $b = 0$ the tuple $(g^x,g^y,g^{xy})$ returned by $\oracle_{\CDH}$ is computed by sampling $x$ and $y$ uniformly at random from $\Zq$. Since $b'$ is also a uniform element, $(\ptrans,\strans)$ is distributed identically from the view of $\user_{\elGamal}$. If $b = 1$ the tuple $(g^x,g^y,g^{xy})$ returned by $\oracle_{\CDH}$ is computed by sampling $x$ uniformly at random from $\Zq$ and setting $\eta \defeq h_{\bb}^{-s}h$ and $y=\RO(\eta)$. This is identical to the computation by $\bbdev$. Hence, from the view of $\user_{\elGamal}$ the transcript $(\ptrans,\strans)$ is also distributed identically when $b = 1$.
+
+To finish the proof, notice that $\user_{\CDH}$ wins the game $\strongdetect{\dev_{\CDH}}{\bbdev_{\CDH}}{\user_{\CDH}}$ if and only if $\user_{\elGamal}$ returns a bit $\hat{b}$ that is equal to $b$. The probability of $\user_{\CDH}$ outputting $\hat{b}$ such that $\hat{b}=b$ is $\prob{\true\leftarrow\instrongdetect{\dev}{\bbdev}{\user_{\elGamal}}}$. Therefore
+\begin{align*}
+	\prob{\true\leftarrow\instrongdetect{\dev}{\bbdev}{\user_{\elGamal}}} = \prob{\true\leftarrow\strongdetect{\dev_{\elGamal}}{\bbdev_{\elGamal}}{\user_{\elGamal}}}.
+\end{align*}
+Equation \ref{eq:5} follows accordingly.
+\end{proof}
+
+Notice that $\bb_{\elGamal}$ models a multi-user scenario, where each distributed device has been subverted with the same public key. Even if these users group together to form a stronger distinguisher it would still not be impossible to detect $\bb_{\elGamal}$. Additionally, if the encryption algorithm has access to persistent memory, one can perform an equivalent subversion by modifying two consecutive encryptions (at an arbitrary point during encryption of multiple messages). This however, can only recover the seconded encrypted messages and not the first. The use-case for this subversion is more realistic, since the encryption does not need to be performed at the same location as the key generation. 
+
+\begin{rem}
+\remlab{skNotInTrans}
+The observant reader might have noticed that the secret key $\sk$ is not included in the secret transcript $\strans$ in $\cgame_{\elGamal}$. One could argue that $\sk$ should be included but if we constructed $\cgame_{\elGamal}$ in this way, it would not be possible to do the reduction to strong undetectability of $\bb_{\CDH}$. This is because we use $g^x$ as the public key in our $\elGamal$ instance and we have no way of computing $x$ (the $\DDH$ problem is assumed hard relative to $\groupgen$, which implies that the $\DL$ problem is hard relative to $\groupgen$ by \propref{cdhImplyDl} and \propref{ddhImplyCdh}). This does not exclude the possibility that the modified $\cgame_{\elGamal}$ and correspondingly modified big brother $\bb_{\elGamal}$, can be proven strongly undetectable by some other means. Instead of strong undetectability one can obtain weak undetectability, which is proven in the same way as above.
+\end{rem}
+
+\remref{skNotInTrans} contains a description of a candidate interactive cryptographic game that is weakly undetectable but not strongly undetectable. 
+ 
+

@@ -1,0 +1,242 @@
+\chapter{Cryptographic Game}
+\chaplab{cryptographicGame}
+
+In this chapter we present definitions of a non-interactive cryptographic game and an interactive cryptographic game. A cryptographic game will, in general, encompass a definition of a \emph{cryptographic device} to which a notion of security, modelled via a \emph{predicate function}, is attached. The game can in addition have parameters defined by a parameter function.
+
+The chapter is organised as follows: in \secref{analysisOfPreviousWork} we analyse (selected) previous works on cryptographic subversion and highlight their main ideas and results. \secref{settingTheStage} contains motivations for the definitions presented in the upcoming sections. Moving on to \secref{cryptographicGame}, we rigorously define  what we mean by a cryptographic game. Two different definitions are presented: one for non-interactive cryptographic games and one for interactive cryptographic games.
+
+\section{Previous Work}
+\seclab{analysisOfPreviousWork}
+
+Before stating our own definitions we take a detour to some previous works on cryptographic subversion. We mainly focus on two works: the fundamental paper \cite{DBLP:conf/crypto/YoungY96} by Young and Yung, and a more recent paper \cite{DBLP:secSym} by Bellare, Paterson and Rogaway. From the analysis we draw ideas for the definitions presented in subsequent sections. Especially, Young and Yung present a subversion that we elaborate heavily on in \chapref{hardnessAssumptionSubversion}. \\
+
+\noindent\textbf{The Dark Side of Black-Box Cryptography, or: Should We Trust Capstone? \cite{DBLP:conf/crypto/YoungY96}}
+
+In this 1996 paper, Young and Yung present the notion of a SETUP (Secretly Embedded Trapdoor with Universal Protection) mechanism. A SETUP mechanism is an algorithm, which can be embedded within a cryptographic system in such a way that the cryptographic system leaks information and at the same time protects the attacker from detection. They called this class of subversions for Kleptographic attacks. 
+
+The main line of work presented is the construction of SETUPs for $\RSA$, $\elGamal$, $\mathsf{DSA}$ and $\mathsf{Kerberos}$ cryptosystems. The main idea is to embed a public key inside a cryptosystem and use this key to construct a subliminal channel that can only be read with the corresponding private key. The embedding of a public key in the target device is the preferred method used in this thesis to give an attacker (big brother) an advantage. 
+
+In particular Young and Yung present a technique for subverting $\elGamal$. In modern terms, they make use of the Random Oracle Model and a second instance of an $\elGamal$ public-key encryption scheme. By a clever construction and over two separate encryptions, they `prove' that it is possible to learn the ephemeral key used in the second encryption and thereby possible to completely recover the second encrypted message. We explore their technique by further elaborating it to construct subversions of $\DL$ flavoured hardness assumptions in \chapref{hardnessAssumptionSubversion}.
+
+Unfortunately the definition of a SETUP is vague and very ambiguous which limits the usability and extendibility of their work. We fix this shortcoming in this thesis. \\
+
+\noindent\textbf{Security of Symmetric Encryption against Mass Surveillance \cite{DBLP:secSym}}
+	
+In light of the infamous facts uncovered by Snowden, the 2014 paper by Bellare, Paterson and Rogaway presents the first rigorous approach to cryptographic subversion. They specifically restrict their scope to symmetric encryption and prove that all probabilistic, state-less symmetric encryptions schemes are susceptible to a subversion attack if a (low) amount of randomness is employed. 
+
+Bellare et al. does not use the same technique as Young et al. Instead they embed a symmetric key from which they construct indistinguishable symmetric schemes that leak secret key material. In this work, the notion of a subversion is clearly defined by looking at the output of a specific scheme and the output of a subverted variant of the same scheme. If the output is (computationally) indistinguishable the subversion is said to be undetectable. We use this idea of defining undetectability in our own definitions but modified to fit our asymmetric approach. This is the first time in literature that this has been done in a formal and rigorous way. 
+
+Besides constructing subversions, Bellera et al. also define surveillance security i.e. quantify when a symmetric encryption scheme is secure against a subversion attack. They construct a family of deterministic, state-full symmetric encryption schemes that are surveillance secure.  Surveillance security is, however, out of scope for this thesis. 	
+
+
+\section{Setting the Stage}
+\seclab{settingTheStage}
+
+On the quest for defining cryptographic games, we first take a drone perspective. Apart from serving as a light introduction to the terminology and ideas used subsequently, this paragraph also serves as a motivational chapter highlighting thoughts that support the more formal definitions coming later. 
+
+Recall that we want to model general cryptographic games. For example, the game that models the $\DL$ hardness assumption, see \figref{DL-game}. The game starts out by having a generator function $\groupgen$ generate a cyclic group $\cgroup$ of order $\order$ and a generator $g$. The game proceeds by performing some operations that is supposed to hide the discrete logarithm $x$ in a cryptographic way. More precisely, it should be computationally hard to compute the discrete logarithm $x$ given $g^x$. The advantage $\adv_{\groupgen}^{\DL}(\adve)$ quantify the probability of computing $x$ for an (computationally bounded) adversary $\adve$. Most cryptographic games contains the same elements as in the game for the $\DL$ hardness assumption. First parameters are generated. Such parameters may come from a standard so we have to deal with that in our definition of a cryptographic game (further discussed below). Next, (cryptographic) computations must be carried out to generate an output that hides some information. These computations can be either non-interactive meaning that the game carries out all of them without any external input (except possible parameters) or it can be interactive, which means that the game interacts with another party, affecting the computations. We deal with both situations. Last, to quantify what the computations must hide an advantage is defined with respect to an (computationally bounded) adversary. The definition of the advantage differs from each game but is generally split between two classes: `compute something' or `distinguish something'. In the compute case, such as in the $\DL$ hardness game, the adversary must compute a value. The advantage $\adv_{\groupgen}^{\DL}(\adve)$ catches just that: the probability of $\adve$ computing the discrete logarithm. In the distinguish case, such as in the $\DDH$ hardness game (see \defref{DDH}), the adversary is asked to distinguish between two distributions: $(g^x,g^y,g^{xy})$ and $(g^x,g^y,g^z)$ with $x,y,z$ uniform random elements. The trivial strategy to use, is just to guess at random, producing a probability of $\frac{1}{2}$ of guessing the correct distribution. To adjust for that strategy the definition of the advantage of the $\DDH$ hardness game must be changed compared to the advantage for the $\DL$ game (simply guessing in the $\DL$ game is also a strategy but would produce a negligible probability if $q$ is exponential in $n$). The adjustment needed is reflected in the definition of $\adv_{\groupgen}^{\DDH}(\adve)$. 
+
+In total, we need to define what it means to generate parameters, define what it means to do computations, both non-interactively and interactively, and finally define a general way to quantify the security property. These three tasks are discussed below and formalised in \secref{cryptographicGame}.
+
+\subsubsection*{Cryptographic device}
+
+A cryptographic device will model the computations done in a cryptographic game. We will consider a device $\dev$ taking a certain set of inputs and producing an output. The goal of $\dev$ is to hide some piece of information in a cryptographic way. A device must therefore have a notion of security quantifying `cryptographic way' and it is, more precisely, the goal of $\dev$ to be secure in the sense of this notion of security. We follow the standard cryptographic literature in defining notions of security. That is, we quantify the security of a device $\dev$ by relating a security game to $\dev$ and imagine an adversary $\adve$ participating in the game. The security game is constructed in such a way that winning it, breaks the security property of $\dev$ we want to achieve. Thus, security of $\dev$ is quantified by requiring that the advantage of winning the security game for \emph{any} (computationally bounded) adversary $\adve$ is at most negligible.  
+
+The output of a device $\dev$ is split between two different transcripts: a public and a secret transcript. The reason for splitting the output into two groups is that it allows us to consider two degrees of undetectability: weak and strong undetectability (see \chapref{definingSubversion}). It is natural to consider two different outputs from a cryptographic operation. In the example of the $\DL$ hardness game, the operation carried out produces a public output $g^x$ and secret output $x$. A user of the device should be able to see both, while a person just observing the device should only see the first. 
+
+\subsubsection*{Parameter function}
+\seclab{parameterFunction}
+
+To a device $\dev$ we associate a parameter function $\param$. In practice it is common for schemes and protocols to have parameters defined from a standard or specification. For example, elliptic curve cryptography deployed in practice use fixed curves. The area of elliptic curve cryptography is in general covered by a plethora of different standards covering selection of such curves \cite{safecurves}. To maintain security of a cryptographic scheme it is very important to restrict the choice of parameters because there are often instantiations that are not secure, when certain parameters are used. 
+
+From our perspective there is a difference between parameters coming from a standard and parameters generated internally by the device, because it changes the power of a subversion attacker. The intuition behind this observation is the following: consider a scheme that can be modelled as a cryptographic game. For concreteness say this scheme uses elliptic curves. If these elliptic curves are fixed by a standard, an attacker that wants to subvert the scheme has extra knowledge\footnote{Assuming that whoever is trying to construct a subversion, can read and Google the way to the standard/specification - which is probably a fair assumption to make!} before generating the key that is going to be embedded inside the scheme (see \secref{bigBrother}). If the device generates the elliptic curves internally, the adversary has no a priori knowledge of these curves and may have trouble generating a suitable key to embed. It follows that having a subversion \emph{independent} of the parameter function is a stronger and more agile subversion than a subversion that rely on parameter knowledge. Therefore, allowing the attacker access to parameters used by a device gives a more realistic model.
+
+Below we highlight 2 different models, we consider throughout this thesis: known and unknown parameters.\\
+
+\noindent\textit{Known parameters:}
+In a situation where a scheme is governed by a public standard or specification, we deal with known parameters. Such parameters can be public keys for public-key encryption or Diffie-Hellman key exchange groups that satisfy certain requirements. 
+
+We may also choose to change the way parameters are generated to explore how this affects the likelihood of doing a subversion attack. For example, it might be that the subversion attacker only needs some subset of parameters fixed from the standard. In such situations we only let $\param$ generate the parameters required by the adversary. We might also go the other way around allowing $\param$ to generate more values than the standard advocates. This gives us more freedom in analysing when schemes fall for subversion attacks and can thereby provide more insight. In general, the addition of a parameter function provides agility to the definitional framework. \\ 
+
+\noindent\textit{Unknown parameters:}
+We also consider devices that are completely independent of any parameter function. E.g. a key generation function operate mostly with only the security parameter and some configuration of what primes it is allowed to generate, which are not parameters. Instead it is implicit in the design of the device. Such a device has a parameter function that is identical $\bot$ i.e. the parameter function provides no information.
+
+
+\section{Cryptographic Game}
+\seclab{cryptographicGame}
+
+We end our quest for a definition of a cryptographic game in this section. We will formally define the notion of a cryptographic game for the non-interactive and interactive case. Both definitions will contain the following 5 elements 
+
+\begin{itemize}
+	\itemsep-0.1em
+	\item A parameter algorithm that outputs parameters and constitutes a priori knowledge of the cryptographic device. 
+	\item A device that performs a cryptographic operation. When executed, the device gets as input a parameter set and produces a public and secret transcript. In the case of an interactive cryptographic game, the device also interacts with another party. The secret transcript contains output from the device that is supposed to be secret for anyone except the user of the device. The public transcript contains the output that is going on the wire and thus visible for everyone. 
+	\item A predicate algorithm that together with the base probability and base factor, quantifies the security guarantee with respect to the device. This should conceptually formalise what an adversary should accomplish when trying to recover the information that the device is hiding.  
+\end{itemize}
+
+The base probability and base factor are two polynomials $\basep(n)$ and $\secf(n)$, which are technical tools to define the notion of security of a game. 
+
+\subsection{Non-Interactive Cryptographic Game}
+\seclab{nonInteractiveCryptographicGame}
+
+\begin{comment}
+Complete details follow below. A plethora of examples are given in the coming chapters. 	
+\end{comment}
+
+With the definition of a non-interactive cryptographic game we specifically aim to capture games defining hardness assumptions. Several such games can be viewed in \chapref{Preliminaries}. Typically, hardness games involves a trapdoor of some sort or the game defines two different distributions and outputs one of them depending on a bit. For the former the goal of an adversary is to compute the inverse of the trapdoor while in the latter case, it is the goal of the adversary to guess the correct bit depending on which distribution is observed, i.e. the adversary has to distinguish between two distributions. Below we precisely formalise a non-interactive cryptographic game ($\NICG$). 
+
+\begin{defn}
+	A \textbf{non-interactive cryptographic game} is a 5-tuple $\left(\param,\dev,\pred,\basep,\secf\right)$, denoted by $\cgame$, where
+	\begin{itemize}
+	\itemsep-0.1em
+		\item $\param$ is the parameter function and is a $\PPT$ algorithm, which on input the security parameter $n$ outputs a list of parameters $\params\in\{0,1\}^*$. We write $\params\leftarrow \param(1^n)$. In case the list is empty, we write $\bot\leftarrow\param(1^n)$ and $\params=\bot$. 
+		\item $\dev$ is the cryptographic device and is a $\PPT$ algorithm, which on input the security parameter $n$ and $\params\in\{0,1\}^*$ outputs a public transcript $\ptrans\in\{0,1\}^*$ and a secret transcript $\strans\in\{0,1\}^*$. We write $(\ptrans,\strans)\leftarrow \dev(1^n,\params)$.
+		\item $\pred$ is the predicate function and is a polynomial-time algorithm, which takes as input a public transcript $\ptrans\in\{0,1\}^*$, secret transcript $\strans\in\{0,1\}^*$ and subject $\delta\in\{0,1\}^*$ and outputs a predicate $\bool\in\{\true,\false\}$. We write $\bool\leftarrow \pred(\ptrans,\strans,\delta)$.
+		\item $\basep(n)$ is the base probability, which is a polynomial in $n$ with range $[0,1]$.
+		\item $\secf(n)$ is the base factor, which is a polynomial in $n$ with range $\mathbb{R}_{>0}$. 
+	\end{itemize}  
+	If $\params$ is equal to $\bot$ for at least one $n$, the parameter function $\param$ must be identical $\bot$. In this case we might ignore $\param$ from the notation (as well as from $\dev$) and call $\cgame$ \emph{standardless}. 
+\end{defn}
+
+When constructing $\dev$ we clearly state whether $\cgame$ is standardless or not. Therefore in the description of a specific device $\dev$, we will not handle both cases i.e. we only deal with $\params=\bot$ or not, and no exceptional case handling is performed when describing algorithms. 
+
+In \figref{DL} we describe a typical $\NICG$. The group we operate in is fixed. Therefore, the group, its order and a generator is computed by the parameter function $\param$. The device $\dev$ models a trapdoor scenario where the discrete logarithm is used as trapdoor. Obviously, the information $\dev$ is trying to hide is the discrete logarithm $x$. Therefore, $x$ is the secret output while the group instance and the computed exponentiation is the public output. 
+
+\begin{boxfigGame}{Cryptographic game modelling the $\DL$ hardness game.}{DL}
+  \begin{description}
+  	\item[\underline{$\param(1^n)$}] ~ 
+  	
+		$(\cgroup,\order,\generator)\leftarrow\groupgen(1^n)$ \\
+		$\params \defeq (\cgroup,q,g)$ \\
+		\Ret $\params$ 	
+  	
+ 	\item[\underline{$\dev(1^n,\params)$}] ~
+ 	
+ 		Parse: $\params = (\cgroup,q,g)$ \\
+ 		$x\unileft\Zq$ \\
+ 		$h\defeq g^x$ \\
+ 		$\tau_p\defeq(\cgroup,\order,\generator,h)$ \\
+ 		$\tau_s\defeq (\cgroup,\order,\generator,x)$ \\
+ 		\Ret $(\tau_p,\tau_s)$
+
+	\item[\underline{$\pred(\ptrans,\strans,\sigma)$}] ~
+	
+		Parse: $\strans=(\cgroup,\order,\generator,x)$ \\
+		\Ret $\askequal{x}{\sigma}$
+		
+	\item[\underline{$(\basep(n),\secf(n)) \defeq (0,1)$}]
+  \end{description}
+  $\groupgen(1^n)$ outputs a description of a cyclic group of order $\order$ and a generator $\generator$. 
+\end{boxfigGame}
+
+Assume that an adversary $\adve$ attacks $\dev$. How do we then measure the likelihood of $\adve$ recovering the discrete logarithm? $\pred$, $\basep(n)$ and $\secf(n)$ to the rescue! We set the predicate function $\pred$ to return $\true$ if and only if the discrete logarithm is given as input and $(\basep(n),\secf(n))=(0,1)$. The likelihood of $\adve$ computing the discrete logarithm, given the public output, is then precisely the likelihood of $\adve$ making $\pred$ return $\true$. This is formalised below in \defref{cgameAdvantage} and \defref{cgameSecure}. 
+
+The predicate function $\pred$ models the security of the device $\dev$. Together with the base probability $\basep(n)$ and base factor $\secf(n)$ we can quantify the advance an adversary has with respect to a specific device. 
+
+\begin{defn}
+\deflab{cgameAdvantage}
+	For a $\PPT$ adversary $\adve$ we define its \textbf{advantage} with respect to a non-interactive cryptographic game $\listcgame$ as
+	\begin{align*}
+		\adv_{\cgame}^{\secgame}(\adve)\defeq \secf(n)\cdot\left\vert \prob{\true \leftarrow \secgame_{\cgame}^{\adve}(n)}-\basep(n)\right\vert,
+	\end{align*}
+where the probability is taken over randomness used in game $\secgame_{\cgame}^{\adve}(n)$.
+\end{defn}
+
+\begin{comment}
+	\begin{align*}
+		\adv_{\cgame}(\adve)\defeq \secf(n)\left\vert \proprob{\params\leftarrow\param(1^n),\,(\ptrans,\strans)\leftarrow \dev\left(1^n,\params\right)}{\true\leftarrow \pred\left(\ptrans,\strans,\adve(\params,\ptrans)\right)}-\basep(n)\right\vert
+	\end{align*}
+\end{comment}
+
+\begin{boxfigGame}{Security game for a non-interactive cryptographic game $\cgame$.}{secGame}
+  \begin{description}
+	\item[\underline{\textbf{Game} $\secgame_{\cgame}^{\adve}(n)$}] ~
+ 	
+ 		$\params \leftarrow \param(1^n)$ \\
+ 		$(\ptrans,\strans)\leftarrow \dev(1^n,\params)$ \\
+ 		$\delta \leftarrow \adve(\params,\ptrans)$ \\
+ 		$\bool \leftarrow \pred(\ptrans,\strans,\delta)$ \\
+		\Ret $\bool$	
+  \end{description}
+\end{boxfigGame}
+
+
+Given parameters $\params$ and transcript $(\ptrans,\strans)$ the adversary $\adve$ precisely wins the security game if $\delta$ is the correct information required by the predicate function $\pred$.  We are now able to define what it means for a non-interactive cryptographic game to be secure. 
+\begin{defn}
+\deflab{cgameSecure}
+	A non-interactive cryptographic game $\listcgame$ is \textbf{secure} if there for every $\PPT$ adversary $\adve$ exists a negligible function $\negl$ such that 
+	\begin{align*}
+		\adv_{\cgame}^{\secgame}(\adve)\leq \negl(n).
+	\end{align*} 
+\end{defn}
+
+The non-interactive cryptographic game in \figref{DL} is actually a secure non-interactive cryptographic game (the reader hopefully already spotted the clear connection too \defref{DL}). The proof is a trivial reduction to the discrete logarithm problem but we omit the proof here.
+
+\subsection{Interactive Cryptographic Game}
+\seclab{interactiveCryptographicGame}
+
+In a conventional cryptographic scheme one starts with a definition that describes the properties of the scheme. Having quantified the properties of the scheme, the normal procedure is then to define the security notion based on a game and corresponding adversarial advantage. Definitions of public-key encryption schemes and symmetric encryption schemes follows this approach. In particular, they all employ interactive security definitions. 
+
+To capture a large class of interactive cryptographic games we are first required to define interaction between two parties: the cryptographic device and a second party. The aim is to do this in a very general way. Our approach is highly inspired by \cite{DBLP:conf/eurocrypt/MironovS15} but with some modifications that better fit our purpose. When we describe concrete schemes later, we do it in simpler terms compared to the level of generality used in the definition below. 
+
+We will denote an interactive cryptographic game using the same notation as for the non-interactive cryptographic games. This creates some ambiguity between the two concepts but we will clearly state which type of game we are referring to in the text and in general trust the reader in telling the difference depending on the context. We provide the details of an interactive cryptographic game ($\ICG$) below. 
+
+\begin{defn}
+\deflab{interactiveCryptographicGame}
+		An \textbf{interactive cryptographic game} is a 5-tuple $(\param,\dev, \pred, \basep, \secf)$, denoted by $\cgame$ that defines an interaction between two stateful parties: a device $\dev$ and a party \footnote{The party $\party$ may be a an adversary, a big brother recovery algorithm (which we define later) or some other party.} $\party$ with state $\st_{\dev}$ and $\st_{\party}$, respectively. $\st_{\dev}$ and $\st_{\party}$ will always refer to the current state of each respective party. In addition, $\cgame$ defines the notion of security $\dev$ must satisfy. 
+		
+		First a setup precedure is run. It returns the starting state for both parties. Next the two parties engage in an interaction, taking turn to send and receive messages. At the end, they both run a return algorithm. Details are as follows:
+	\begin{itemize}
+	\itemsep-0.1em
+		\item $\param$ is the setup algorithm that is a $\PPT$ algorithm, which on input the security parameter $n$ outputs parameters $\params\in\{0,1\}^*$ and a message schedule. We omit explicit mentioning of the message schedule in the sequel as it will always be clear. $\params$ is the initial state for both $\dev$ and $\party$.
+		\item $\dev$ is the interactive cryptographic device, which is a party that interacts with another party $\party$. After the setup algorithm $\param$ has been run, $\dev$ and $\party$ are given $\params$ and proceed to send messages according to the message schedule. Each party has an associated next message algorithm $\next_{\party}(\st_{\party})$ and $\next_{\dev}(\st_{\dev})$ that is called when a message must be sent. Additionally, each party has a message receive algorithm $\receive_{\party}(\st_{\party},m)$ and $\receive_{\dev}(\st_{\dev},m)$, which is called when a message $m\in\{0,1\}^*$ must be received. After the interaction is finished, $\dev$ and $\party$ run their return algorithms $\return_{\party}(\st_{\party})$ and $\return_{\dev}(\st_{\dev})$, and return their results: $\return_{\dev}(\st_{\dev})$ will return two transcripts $\ptrans\in\{0,1\}^*$ and $\strans\in\{0,1\}^*$ containing respectively the public messages sent during the execution and the private output from $\dev$, while $\return_{\party}(\st_{\party})$ will return some information $\delta\in\{0,1\}^*$. The interaction between $\dev$ and $\party$ must end after a polynomial (in $n$) number of steps.
+		We identify $\dev = (\receive_{\dev},\next_{\dev},\return_{\dev})$ and $\party = (\receive_{\party},\next_{\party},\return_{\party})$.
+		\item $\pred$ is the predicate function, which takes as input a public transcript $\ptrans\in\{0,1\}^*$, secret transcript $\strans\in\{0,1\}^*$ and subject $\delta\in\{0,1\}^*$ and outputs a predicate $\bool\in\{\true,\false\}$. We write $\bool\leftarrow \pred(\ptrans,\strans,\delta)$.
+		\item $\basep(n)$ is the base probability, which is a polynomial in $n$ with range $[0,1]$.
+		\item $\secf(n)$ is the base factor, which is a polynomial in $n$ with range $\mathbb{R}_{>0}$. 
+	\end{itemize}  
+Both $\dev$ and $\party$ must be $\PPT$ parties meaning that each step must take at most polynomial time (in $n$) to finish i.e. algorithms $\receive$, $\next$ and $\return$ all run in polynomial time (in $n$) for all states and messages. If any of the two parties sent the special symbol $\sharp$ the interaction terminates\footnote{This might happen if one of the two parties are performing a task that can fail such as generating a $\RSA$ modulus.} immediately . 
+
+By the terminology \emph{run $\cgame$ with $\party$}, we mean that we run the protocol defined by $\param$, $\dev$ and $\party$. If $\params$ and the message schedule is given, we also use the terminology \emph{run $\dev$ with $\party$ given $\params$} (or just \emph{run $\dev$ and $\party$} when $\params$ is clear), to mean that we run the protocol defined by $\dev$, $\party$ and message schedule, where $\dev$ and $\party$ are given initial state $\params$ as input before sending messages. 
+
+When we in the sequel choose a party $\party$ and let $\party$ interact with an interactive cryptographic device $\dev$ we implicitly assume that $\party$ respect the message schedule. For the concrete interactive cryptographic games we describe later, it will be clear which parties that can interact with a concrete interactive cryptographic device $\dev$.
+
+Finally, we only consider honest parties i.e. all parties must adhere to the message schedule and are not allowed to send bogus messages, e.g. if $\party$ is required to send two elements from a group $\cgroup$, $\party$ must do that and not send elements from another group\footnote{That is, for both parties we assume that the the messages received satisfy some appropriate validity checks}. 
+\end{defn}
+
+
+To quantify security of an interactive cryptographic game, we make some modifications to \defref{cgameAdvantage} and \defref{cgameSecure}. The latter stays the same while in the former, we make the game $\secgame_{\cgame}^{\adve}(n)$ interactive. Adversary $\adve$ might be adaptive: during the execution of the interaction between $\adve$ and $\dev$, the adversary is allowed to adapt its strategy based on the messages received from $\dev$. Hence, it is not required for $\adve$ to  fix how to choose each message beforehand. $\adve$ must still obey the message schedule though. We give details of the security quantification below.
+
+\begin{defn}
+\deflab{InteractiveCgameAdvantage}
+	For a $\PPT$ adversary $\adve$ we define its \textbf{advantage} with respect to an interactive cryptographic game $\listcgame$ as
+	\begin{align*}
+		\adv_{\cgame}^{\insecgame}(\adve)\defeq \secf(n)\cdot\left\vert \prob{\true \leftarrow \insecgame_{\cgame}^{\adve}(n)}-\basep(n)\right\vert,
+	\end{align*}
+where the probability is taken over randomness used in the game $\insecgame_{\cgame}^{\adve}(n)$.
+\end{defn}
+
+\begin{boxfigGame}{Security game for an interactive cryptographic game $\cgame$.}{InteractivesecGame}
+  \begin{description}
+	\item[\underline{\textbf{Game} $\insecgame_{\cgame}^{\adve}(n)$}] ~
+ 	
+ 		Run $\cgame$ with $\adve$ \\
+ 		$\delta\leftarrow\return_{\adve}(\st_{\adve})$ \\
+ 		$(\ptrans,\strans)\leftarrow \return_{\dev}(\st_{\dev})$ \\
+ 		$\bool \leftarrow \pred(\ptrans,\strans,\delta)$ \\
+		\Ret $\bool$
+  \end{description}
+\end{boxfigGame}
+
+The adversary $\adve$ precisely wins the security game if $\delta$ is the information required by $\pred$.  We are now able to define what it means for an interactive cryptographic game to be secure. 
+\begin{defn}
+\deflab{interactiveCgameSecure}
+	An interactive cryptographic game $\listcgame$ is \textbf{secure} if there for every $\PPT$ adversary $\adve$ exists a negligible function $\negl$ such that 
+	\begin{align*}
+		\adv_{\cgame}^{\insecgame}(\adve)\leq \negl(n).
+	\end{align*} 
+\end{defn}
+
+A secure interactive cryptographic game is presented in \chapref{publicKeyEncryptionSubversion}. 
+
+

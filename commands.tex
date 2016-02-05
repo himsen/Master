@@ -1,0 +1,693 @@
+
+%%
+% Label/reference conventions
+%%
+% Lemmas
+\newcommand{\lemmlab}[1]{\label{lemm:#1}}
+\newcommand{\lemmref}[1]{Lemma~\ref{lemm:#1}}
+
+% Propositions
+\newcommand{\proplab}[1]{\label{prop:#1}}
+\newcommand{\propref}[1]{Propositon~\ref{prop:#1}}
+
+% Theorems
+\newcommand{\thmlab}[1]{\label{thm:#1}}
+\newcommand{\thmref}[1]{Theorem~\ref{thm:#1}}
+
+% Corollaries
+\newcommand{\corlab}[1]{\label{cor:#1}}
+\newcommand{\corref}[1]{Cor.~\ref{cor:#1}}
+
+% Sections
+\newcommand{\seclab}[1]{\label{sec:#1}}
+\newcommand{\secref}[1]{Section~\ref{sec:#1}}
+
+% Equations
+\newcommand{\eqlab}[1]{\label{eq:#1}}
+\renewcommand{\eqref}[1]{(\ref{eq:#1})}
+
+% Figures
+\newcommand{\figlab}[1]{\label{fig:#1}}
+\newcommand{\figref}[1]{Figure~\ref{fig:#1}}
+
+% Appendicies
+\newcommand{\applab}[1]{\label{app:#1}}
+\newcommand{\appref}[1]{Appendix~\ref{app:#1}}
+
+% Definitions
+\newcommand{\deflab}[1]{\label{def:#1}}
+\newcommand{\defref}[1]{Def.~\ref{def:#1}}
+
+% Chapters
+\newcommand{\chaplab}[1]{\label{chap:#1}}
+\newcommand{\chapref}[1]{Chapter~\ref{chap:#1}}
+
+% Remarks	
+\newcommand{\remlab}[1]{\label{rem:#1}}
+\newcommand{\remref}[1]{Remark~\ref{rem:#1}}
+
+% Examples	
+\newcommand{\exlab}[1]{\label{ex:#1}}
+\newcommand{\exref}[1]{Example~\ref{ex:#1}}
+
+
+
+
+%%%
+% Theorem environments
+%%%
+%\theoremstyle{plain}
+%\newtheorem{theorem}{Theorem}[chapter]
+%\newtheorem{lemma}{Lemma}[chapter]
+%\newtheorem{corollary}{Corrollary}[chapter]
+%\newtheorem{fact}{Fact}[chapter]
+%\theoremstyle{definition}
+%\newtheorem{definition}{Definition}[chapter]
+%\theoremstyle{remark}
+%\newtheorem{remark}{Remark}[chapter]
+
+%%%
+% Style
+%%%
+\newcommand{\defterm}[1]{\emph{#1}}
+\mathchardef\mhyphen="2D
+
+%%%
+% Hardness assumptions
+%%%
+% Adversary A
+\newcommand{\adve}{\mathcal{A}}
+% Computational Diffie Hellman
+\newcommand{\CDH}{\mathsf{CDH}}
+% Decisional Diffie Hellman
+\newcommand{\DDH}{\mathsf{DDH}}
+% Discrete logarithm problem
+\newcommand{\DL}{\mathsf{DL}}
+% Gap-computational Diffie Hellman
+\newcommand{\gapcdh}{\mathsf{GAP}\mhyphen\CDH} 
+% Gen RSA
+\newcommand{\genRSA}{\operatorname{\mathsf{GenRSA}}}
+% RSA invert 
+\newcommand{\RSAin}{\RSA\mhyphen\mathsf{inv}}
+% RSA hardness
+\newcommand{\RSAgame}[2]{\RSA \mhyphen \mathsf{inv}_{#1,#2}}
+% Factor
+\newcommand{\Factor}{\mathsf{Factor}}
+% Gen modulus
+\newcommand{\GenModulus}{\operatorname{\mathsf{GenModulus}}}
+% Factor game
+\newcommand{\FactorGame}[2]{\Factor_{#1,#2}}
+% Learning with errors game
+\newcommand{\LWE}{\mathsf{LWE}}
+% Chosen plaintext security (CPA)
+\newcommand{\CPA}{\mathsf{CPA}}
+% CCA security
+\newcommand{\CCA}{\mathsf{CCA}}
+
+%%% 
+% Cryptographic functions
+%%%
+% Key generation
+\newcommand{\gen}{\operatorname{\mathsf{Gen}}}
+% Encryption function
+\newcommand{\enc}{\operatorname{\mathsf{Enc}}}
+% Decryption function
+\newcommand{\dec}{\operatorname{\mathsf{Dec}}}
+% DES
+\newcommand{\DES}{\mathsf{DES}}
+% AES
+\newcommand{\AES}{\mathsf{AES}}
+
+%%%
+% Non-interactive cryptographic game
+%%%
+% non-interactive cryptographic game
+\newcommand{\cgame}{\operatorname{\mathsf{G}}}
+\newcommand{\NICG}{\mathsf{NICG}}
+% Param function
+\newcommand{\param}{\operatorname{\mathsf{Par}}}
+% Device
+\newcommand{\dev}{\operatorname{\mathsf{Dev}}}
+% Predicate
+\newcommand{\pred}{\operatorname{\mathsf{Pre}}}
+% Base probability
+\newcommand{\basep}{p_{0}}
+% Security factor
+\newcommand{\secf}{\alpha_{0}}
+% Parameters
+\newcommand{\params}{\mathsf{params}}
+% List 
+\newcommand{\listcgame}{\cgame=\left(\param,\dev,\pred,\basep,\secf\right)}
+% List standards free
+\newcommand{\listcgameless}{\cgame=\left(\dev,\pred,\basep,\secf\right)}
+% Security game
+\newcommand{\secgame}{\mathsf{SEC}}
+
+%%%
+% Interactive Cryptographic Game
+%%%
+% Interactive cryptographic game
+\newcommand{\ICG}{\mathsf{ICG}}
+% State
+\newcommand{\st}{\sigma}
+% Next algorithm 
+\newcommand{\next}{\operatorname{\mathsf{Next}}}
+% Receive algorithm 
+\newcommand{\receive}{\operatorname{\mathsf{Receive}}}
+% Return algorithm
+\newcommand{\return}{\operatorname{\mathsf{Return}}}
+% Setup algorithm 
+\newcommand{\setup}{\operatorname{\mathsf{Setup}}}
+% Party
+\newcommand{\party}{\mathsf{P}}
+% Security game for interactive cryptographic game
+\newcommand{\insecgame}{\mathsf{IN}\mhyphen\mathsf{SEC}}
+% interactive recovery game
+\newcommand{\inrecgame}{\mathsf{IN}\mhyphen\mathsf{REC}}
+% Weak detection 
+\newcommand{\inweakdetect}[3]{\weakly\mhyphen\mathsf{IN}\mhyphen\mathsf{DETECT}_{#1,#2}^{#3}(n)}
+% Strongly detection
+\newcommand{\instrongdetect}[3]{\strongly\mhyphen\mathsf{IN}\mhyphen\mathsf{DETECT}_{#1,#2}^{#3}(n)}
+% Type detection
+\newcommand{\intypedetect}[3]{\type\mhyphen\mathsf{IN}\mhyphen\mathsf{DETECT}_{#1,#2}^{#3}(n)}
+% Weak detection plain
+\newcommand{\inweakdetectplain}{\weakly\mhyphen\mathsf{IN}\mhyphen\mathsf{DETECT}}
+% Strong detection plain
+\newcommand{\instrongdetectplain}{\strongly\mhyphen\mathsf{IN}\mhyphen\mathsf{DETECT}}
+% Type detection notation
+\newcommand{\innotationtypedetect}{\type\mhyphen\mathsf{IN}\mhyphen\mathsf{DETECT}}
+% List
+\newcommand{\inlistcgame}{\cgame=\left(\setup,\dev,\pred,\basep,\secf\right)}
+% Input
+\newcommand{\I}{\mathsf{input}}
+% Challenger
+\newcommand{\chal}{\mathsf{Challenger}}
+% General
+\newcommand{\general}{\mathsf{General}}
+% Function 1
+\newcommand{\f}{\operatorname{\mathsf{f}}}
+% Extract
+\newcommand{\ext}{\operatorname{\mathsf{Extract}}}
+% Extract g^x
+\newcommand{\extx}{\operatorname{\mathsf{Extract}_{\mathsf{x}}}}
+% Extract \strans
+\newcommand{\exty}{\operatorname{\mathsf{Extract}_{\mathsf{y}}}}
+% Result
+\newcommand{\result}{\operatorname{\mathsf{Result}}}
+% Cramer-Shoup
+\newcommand{\CS}{\mathsf{Cramer}\mhyphen\mathsf{Shoup}}
+
+
+%%%
+% Big Brother
+%%%
+% Universal Big Brother symbol
+\newcommand{\bb}{\mathsf{B}}
+% Big Brother public key
+\newcommand{\bbpk}{\mathsf{pk}_{\bb}}
+% Big Brorther secret key
+\newcommand{\bbsk}{\mathsf{sk}_{\bb}}
+% Asymmetric subversion type
+\newcommand{\asymmetric}{\mathsf{asymmetric}}
+% Symmetric subversion type
+\newcommand{\symmetric}{\mathsf{symmetric}}
+
+%%% Non-interactive cryptographic game big brother adversary
+% Big brother generation
+\newcommand{\bbgen}{\mathsf{B}.\mathsf{Gen}}
+% Big brother device
+\newcommand{\bbdev}{\mathsf{B}.\mathsf{Dev}}
+% Recovery function
+\newcommand{\reco}{\mathsf{Rec}}
+% Big brother recovery
+\newcommand{\bbrec}{\mathsf{B}.\mathsf{Rec}}
+% List big brother 
+\newcommand{\listbb}{\bb = \left(\bbgen,\bbdev,\bbrec\right)}
+% Public transcript 
+\newcommand{\ptrans}{\tau_p}
+% Private (secret) transcript
+\newcommand{\strans}{\tau_s}
+% Recover sec game
+\newcommand{\recgame}{\mathsf{REC}}
+
+%\scalebox{0.75}[1.0]{\( - \)}
+%%% Weakly/strongly subversion of non-interactive cryptographic game
+% type
+\newcommand{\type}{\mathsf{type}}
+% types 
+\newcommand{\weakly}{\mathsf{weak}}
+\newcommand{\strongly}{\mathsf{strong}}
+% Weak detection 
+\newcommand{\weakdetect}[3]{\weakly\mhyphen\mathsf{DETECT}_{#1,#2}^{#3}(n)}
+% Strongly detection
+\newcommand{\strongdetect}[3]{\strongly\mhyphen\mathsf{DETECT}_{#1,#2}^{#3}(n)}
+% Type detection
+\newcommand{\typedetect}[3]{\type\mhyphen\mathsf{DETECT}_{#1,#2}^{#3}(n)}
+% Weak detection plain
+\newcommand{\weakdetectplain}{\weakly\mhyphen\mathsf{DETECT}}
+% Strong detection plain
+\newcommand{\strongdetectplain}{\strongly\mhyphen\mathsf{DETECT}}
+% Type detection notation
+\newcommand{\notationtypedetect}{\type\mhyphen\mathsf{DETECT}}
+
+%%% Public key crypto system big brother
+% Big Brother PKCS
+\newcommand{\bbpkcs}[3]{\operatorname{\prod^{\bb}} = \left( #1, #2, #3 \right) }
+% Big Brother key generation
+%\newcommand{\bbgen}{\operatorname{\mathsf{Gen}^{\bb}}}
+% Big Brother encryption
+\newcommand{\bbenc}{\operatorname{\mathsf{Enc}^{\bb}}}
+% Big Brother decryption
+\newcommand{\bbdec}{\operatorname{\mathsf{Dec}^{\bb}}}
+
+%%%
+% Generel cryptology utility
+%%%
+% Draw bit 
+\newcommand{\drawbit}{\leftarrow_R\left\{0,1\right\}}
+% Ask equal
+\newcommand{\askequal}[2]{(#1\mathrel{\overset{\makebox[0pt]{\mbox{\normalfont\tiny\sffamily ?}}}{=}}#2)}
+% Output
+\newcommand{\Ret}{\textbf{Return}~}
+% Query event
+\newcommand{\query}{\mathsf{Query}}
+% Success event
+\newcommand{\success}{\mathsf{Success}}
+%
+\newcommand{\rep}{\mathsf{Repeat}}
+%  polynomial time 
+\newcommand{\PPT}{\mathsf{PPT}}
+% Sample uniformly with left arrow
+\newcommand{\unileft}{\leftarrow_R}
+% Random oracle
+\newcommand{\RO}{\operatorname{\mathcal{R}}}
+% Probability AND
+\newcommand{\pand}{\wedge}
+% Probability OR
+\newcommand{\por}{\vee}
+% Probability negative
+\newcommand{\pneg}[1]{\overline{\mathstrut#1}}
+% Public key
+\newcommand{\pk}{\mathsf{pk}}
+% Secret key
+\newcommand{\sk}{\mathsf{sk}}
+% El gamal
+\newcommand{\elGamal}{\mathsf{El}\mhyphen\mathsf{Gamal}}
+% RSA 
+\newcommand{\RSA}{\mathsf{RSA}}
+% General polynomial
+\newcommand{\pol}{\operatorname{l}}
+% Long left arrow with length parameters and overset text (#1,#2)=(text,arrow length)
+\newcommand{\longleftar}[2]{\overset{#1}{\xleftarrow{\hspace*{#2 cm}}}}
+% Long right arrow with length parameters and overset text (#1,#2)=(text,arrow length)
+\newcommand{\longrightar}[2]{\overset{#1}{\xrightarrow{\hspace*{#2 cm}}}}
+% Probabilitstic
+\newcommand{\probabilistic}{\mathsf{probabilistic}}
+% State-less
+\newcommand{\stateless}{\mathsf{stateless}}
+
+% Description of interactive game
+\newenvironment{intGame}[2]{% {#1}{#2} = {Caption}{label}
+     \begin{figure}[ht!]
+     \newcommand{\FigCaption}{#1}
+     \newcommand{\FigLabel}{#2}
+     \vspace{-0.25cm}
+		\begin{framed}
+             }{%
+		\end{framed}
+       \vspace{-0.25cm}
+       \caption{\FigCaption}
+       \figlab{\FigLabel}     
+	\end{figure}
+}
+
+% PRF
+\newcommand{\PRF}{\mathsf{PRF}}
+% indistinguishable encryption in the presence of an eavesdropper
+\newcommand{\EAV}{\mathsf{EAV}}
+% One-time-pad
+\newcommand{\onetimepad}{\mathsf{one}\mhyphen\mathsf{time}\mhyphen\mathsf{pad}}
+% Permuation
+\newcommand{\perm}{\mathsf{Perm}}
+% Distinguisher
+\newcommand{\dis}{\mathcal{D}}
+% Functions
+\newcommand{\func}{\mathsf{Func}}
+% External Diffie-Hellman assumption
+\newcommand{\XDH}{\mathsf{XDH}}
+% Challenger
+\newcommand{\challenger}{\mathsf{Challenger}}
+
+%%%
+% Symmetric subversion
+%%%
+% Symmetric big brother key
+\newcommand{\bbk}{\mathsf{k}_{\bb}}
+% Security game for interactive cryptographic game
+\newcommand{\symsecgame}{\mathsf{SYM}\mhyphen\mathsf{SEC}}
+% interactive recovery game
+\newcommand{\symrecgame}{\mathsf{SYM}\mhyphen\mathsf{REC}}
+% Weak detection 
+\newcommand{\symweakdetect}[3]{\weakly\mhyphen\mathsf{SYM}\mhyphen\mathsf{DETECT}_{#1,#2}^{#3}(n)}
+% Strongly detection
+\newcommand{\symstrongdetect}[3]{\strongly\mhyphen\mathsf{SYM}\mhyphen\mathsf{DETECT}_{#1,#2}^{#3}(n)}
+% Type detection
+\newcommand{\symtypedetect}[3]{\type\mhyphen\mathsf{SYM}\mhyphen\mathsf{DETECT}_{#1,#2}^{#3}(n)}
+% Weak detection plain
+\newcommand{\symweakdetectplain}{\weakly\mhyphen\mathsf{SYM}\mhyphen\mathsf{DETECT}}
+% Strong detection plain
+\newcommand{\symstrongdetectplain}{\strongly\mhyphen\mathsf{SYM}\mhyphen\mathsf{DETECT}}
+% Type detection notation
+\newcommand{\symnotationtypedetect}{\type\mhyphen\mathsf{SYM}\mhyphen\mathsf{DETECT}}
+% Key
+\newcommand{\key}{\mathsf{k}}
+% Symmetric
+\newcommand{\sym}{\mathsf{sym}}
+% IV
+\newcommand{\iv}{\mathsf{IV}}
+% Block cipher
+\newcommand{\Enc}[1]{\operatorname{\mathsf{Enc}_{#1}^{\mathsf{block}}}}
+% Block cipher without key
+\newcommand{\EncBlock}{\operatorname{\mathsf{Enc}^{\mathsf{block}}}}
+% CBC
+\newcommand{\CBC}{\mathsf{CBC}}
+
+%%%
+% Security definitions
+%%%
+% Detectability key generation {#1}{#2}{#3} = {pkcs}{subverted pkcs}{user}
+\newcommand{\detect}[3]{\mathsf{DETECT}_{#1,#2}^{#3}}
+% DETECT
+\newcommand{\sdetect}{\mathsf{DETECT}}
+%  indistinguishable from random {#1}{#2} = {enc}{adversary}
+\newcommand{\unidist}[2]{\mathsf{UNIDIST}_{#1}^{#2}}
+% UNIDIST 
+\newcommand{\sunidist}{\mathsf{UNIDIST}}
+% User
+\newcommand{\user}{\mathcal{U}}
+% Eavesdropper 
+\newcommand{\eve}{\mathcal{E}}
+% Subverted PKCS game
+\newcommand{\gamesubpkcs}{\operatorname{\widetilde{\Pi}}}
+% PKCS game
+\newcommand{\gamepkcs}{\operatorname{\Pi}}
+% Oracle 
+\newcommand{\oraclegen}{\operatorname{\mathsf{GEN}}}
+% Oracle
+\newcommand{\oracle}{\operatorname{\mathcal{O}}}
+% Distinguisher
+\newcommand{\dist}{\operatorname{\mathcal{D}}}
+% Cyclic group 
+\newcommand{\cgroup}{\mathbb{G}}
+% Order of cyclic group
+\newcommand{\order}{q}
+% Generator of cyclic group
+\newcommand{\generator}{g}
+% Group gen
+\newcommand{\groupgen}{\operatorname{\mathcal{G}}}
+% true output
+\newcommand{\true}{\mathsf{true}}
+% false output
+\newcommand{\false}{\mathsf{false}}
+% Boolean
+\newcommand{\bool}{\mathsf{bool}}
+% Security
+\newcommand{\SEC}{\mathsf{SEC}}
+
+%%%
+% Various math
+%%%
+% Bit set
+\newcommand{\bitset}[1]{\left\{0,1\right\}^{#1}}
+% Gaussion distribution
+\newcommand{\Gausdis}{\chi}
+% Sample random element uniformly
+\newcommand{\suni}{\leftarrow_R}
+% Sample element according to specific distribution
+\newcommand{\sdis}[1]{\leftarrow_{#1}}
+% A pretty ":="
+\newcommand*{\defeq}{\mathrel{\vcenter{\baselineskip0.5ex \lineskiplimit0pt
+                     \hbox{\scriptsize.}\hbox{\scriptsize.}}}%
+                     =}
+% Residue ring of integers modulo p
+\newcommand{\Zmod}[1]{\mathbb{Z}_{#1}}
+% Units of residue ring of integers modulo p
+\newcommand{\uZmod}[1]{\mathbb{Z}_{#1}^*}
+
+
+% PKCS only
+\newcommand{\spkcs}{\operatorname{\Pi}}
+% PKCS - public key crypty system
+\newcommand{\pkcs}[3]{\operatorname{\Pi} = \left( #1, #2, #3 \right) }
+% Subverted PKCS only
+\newcommand{\ssubpkcs}{\operatorname{\widetilde{\prod}}}
+% Subverted PKCS
+\newcommand{\subpkcs}[3]{\operatorname{\widetilde{\prod}} = \left( #1, #2, #3 \right) }
+% Sub key generation
+\newcommand{\subgen}{\operatorname{\widetilde{\mathsf{Gen}}}}
+% Subverted encryption tion
+\newcommand{\subenc}{\operatorname{\widetilde{\mathsf{Enc}}}}
+% Subverted decryption function
+\newcommand{\subdec}{\operatorname{\widetilde{\mathsf{Dec}}}}
+% Recovery function
+\newcommand{\rec}{\operatorname{\widetilde{\mathsf{Rec}}}}
+
+% Clean probability
+\newcommand{\prob}[1]{\operatorname{Pr}\left[{#1}\right]}
+% Emphasied probability
+\newcommand{\probb}[2]{\operatorname{Pr_{#2}}\left[{#1}\right]}
+% Conditional probability
+\newcommand{\condprob}[2]{\operatorname{Pr}\left[#1\,\vert\,#2\right]}
+% CEmphasied onditional probability
+\newcommand{\condprobb}[3]{\underset{#3}{\operatorname{Pr}}\left[#1\,\big\vert\,#2\right]}
+% Procedure probability
+\newcommand{\proprob}[2]{\operatorname{Pr}\left[#1\, :\, #2\right]}
+
+
+% Image
+\newcommand{\img}{\operatorname{img}}
+% Hamming distance
+\newcommand{\ham}{\operatorname{ham}}
+% Negation
+\renewcommand{\ng}[1]{\overline{#1}}
+% Small one-half symbol
+\newcommand{\oh}{\smash{\frac12}}
+% Random element
+\newcommand{\inR}{\in_{\text{\normalfont\tiny{R}}}}
+% {0, 1}
+\newcommand{\zo}{\{0,1\}}
+% {0, 1}^k
+\newcommand{\zok}{\{0,1\}^k}
+% Define
+\newcommand{\Def}{\stackrel{\text{\normalfont\tiny{def}}}{=}}
+% Equality test
+\newcommand{\eqq}{\stackrel{\text{\normalfont\tiny{?}}}{=}} 
+% Min entropy
+\newcommand{\Hmin}{H_{\infty}}
+% Polynomial function
+\newcommand{\poly}{\operatorname{poly}}
+% Negliable function
+\newcommand{\negl}{\operatorname{\mathsf{negl}}}
+% Expectation
+\newcommand{\E}[1]{\operatorname{E}\left[{#1}\right]}
+% XOR
+\newcommand{\xor}{\oplus}
+% Z_q
+\newcommand{\Zq}{\mathbb{Z}_q}
+% varepsilon
+\renewcommand{\epsilon}{\varepsilon}
+% Sharp (for counting)
+\renewcommand{\sharp}{\#}
+% Natural numbers
+%\newcommand{\N}{\mathbb{N}}
+% The integers
+%\newcommand{\Z}{\mathbb Z}
+% M?
+\newcommand{\M}{{\mathcal{M}}}
+% N?
+\newcommand{\NN}{{\mathcal{N}}}
+% S?
+\renewcommand{\SS}{\mathcal{S}}
+
+\DeclarePairedDelimiter{\ceil}{\lceil}{\rceil}
+\DeclarePairedDelimiter{\floor}{\lfloor}{\rfloor}
+
+%%%
+% Various symbols
+%%%
+% A prg
+\newcommand{\prg}{\operatorname{prg}}
+% Advantage
+\newcommand{\adv}{\operatorname{Adv}}
+
+
+%%%
+% Players
+%%%
+% For names of players
+\newcommand{\ant}[1]{\ensuremath{\mathsf{#1}}}
+\newcommand{\Ali}{{\ant{A}\xspace}}
+\newcommand{\Aliadv}{\ant{A^*}\xspace}
+\newcommand{\Bob}{{\ant{B}}\xspace}
+\newcommand{\Bobadv}{\ant{B^*}\xspace}
+\newcommand{\Sim}{{\ant{S}}\xspace}
+\newcommand{\Simadv}{{$\Sim^*$}\xspace}
+\newcommand{\Env}{\ant{Z}\xspace}
+
+
+%%%
+% Functionalities
+%%%
+% For naming functionalities
+%\newcommand{\func}[1]{\ensuremath{\mathcal{F}_\textsc{#1}}\xspace}
+% Commands to functionalities
+%\newcommand{\cmd}[1]{\texttt{#1}\xspace}
+% Common functionalities
+\newcommand{\OT}{\ensuremath{\mathcal{F}_\textsc{OT}}\xspace}
+
+
+%%%
+% Common algorithms
+%%%
+% Style
+\newcommand\mycmd[1]{\ensuremath{#1}}
+\newcommand\myop[1]{\mycmd{\operatorname{\mathsf{#1}}}}
+
+%%%
+% Matrices
+%%%
+% Vertical lines indicating column vectors
+\newcommand*{\vertbar}{\rule[1ex]{0.5pt}{2.5ex}}
+% Horizontal lines indication row vectors
+\newcommand*{\horzbar}{\rule[.5ex]{2.5ex}{0.5pt}}
+
+	
+%%%
+% Boxfig
+%%%
+\newenvironment{boxfig}[2]{% {#1}{#2} = {Caption}{label}
+     \begin{figure}[ht!]
+     \newcommand{\FigCaption}{#1}
+     \newcommand{\FigLabel}{#2}
+       \vspace{-0.25cm}
+     \begin{center}
+       \begin{small}
+         \begin{tabular}{@{}|@{~~}l@{~~}|@{}}
+           \hline
+           \rule[-1.5ex]{0pt}{1ex}\begin{minipage}[b]{.96\linewidth}
+             \vspace{1ex}
+             \smallskip
+             }{%
+           \end{minipage}\\
+           \hline
+         \end{tabular}
+       \end{small}
+       \vspace{-0.25cm}
+       \caption{\FigCaption}
+       \figlab{\FigLabel}
+     \end{center}
+       \vspace{-0.5cm}
+       
+   \end{figure}
+}
+
+\newenvironment{boxfigGame}[2]{% {#1}{#2} = {Caption}{label}
+     \begin{figure}[ht!]
+     \newcommand{\FigCaption}{#1}
+     \newcommand{\FigLabel}{#2}
+       \vspace{-0.25cm}
+     \begin{center}
+       \begin{small}
+         \begin{tabular}{@{}|@{~~}l@{~~}|@{}}
+           \hline
+           \rule[-1.5ex]{0pt}{1ex}\begin{minipage}[b]{.5\linewidth}
+             \vspace{1ex}
+             \smallskip
+             }{%
+           \end{minipage}\\
+           \hline
+         \end{tabular}
+       \end{small}
+       \vspace{-0.25cm}
+       \caption{\FigCaption}
+       \figlab{\FigLabel}
+     \end{center}
+       \vspace{-0.5cm}
+       
+   \end{figure}
+}
+\renewcommand{\arraystretch}{1.5}
+\newenvironment{boxfigTwo}[2]{% {#1}{#2} = {Caption}{label}
+     \begin{figure}[ht!]
+     \newcommand{\FigCaption}{#1}
+     \newcommand{\FigLabel}{#2}
+     \vspace{-0.25cm}
+     \begin{center}
+       \begin{small}
+         \begin{tabular}{@{}|@{~~}l@{~~}|@{~~}l@{~~}|@{}}
+           \hline
+           \rule[-1.5ex]{0pt}{1ex}
+             }{%
+           \hline
+         \end{tabular}
+       \end{small}
+       \vspace{-0.25cm}
+       \caption{\FigCaption}
+       \figlab{\FigLabel}
+     \end{center}
+       \vspace{-0.5cm}     
+   \end{figure}
+}
+
+
+
+% Removes bold font from description environment
+\renewcommand*\descriptionlabel[1]{\hspace\labelsep\normalfont #1}
+
+%%%
+% An alternative abstract environment
+%%%
+\newenvironment{myabstract}
+{\small\begin{center}\bf\abstractname\vspace{-0.5em}\end{center}\quotation}
+{\endquotation}
+
+
+%%%
+% OT-extension specific commands
+%%%
+% Guess delta command
+\newcommand{\guess}{\cmd{guess}}
+% Leak stuff command
+\newcommand{\cleak}{\cmd{leak}}
+% Correct
+\newcommand{\correct}{\cmd{correct}}
+% Incorrect
+\newcommand{\incorrect}{\cmd{incorrect}}
+% Colors
+\newcommand{\colors}{\cmd{colors}}
+% Pairs
+\newcommand{\pairs}{\cmd{pairs}}
+% ROT
+\newcommand{\ROT}{\ensuremath{\mathcal{F}_{\textsc{ROT}}}\xspace}
+% Delta ROT
+\newcommand{\DROT}{\ensuremath{\mathcal{F}_{\Delta\textsc{-ROT}}}\xspace}
+% Weak Delta ROT
+\newcommand{\LDROT}{\ensuremath{\mathcal{F}_{\Delta\textsc{-ROT}}}\xspace}
+% Leaky Delta ROT
+\newcommand{\GROT}{\ensuremath{\mathcal{F}_{\Gamma\textsc{-ROT}}}\xspace}
+
+
+%%%
+% Security parameters
+%%%
+% Statistical security parameter
+\newcommand{\statpar}{\sigma}
+% Computational security parameter
+\newcommand{\comppar}{\psi}
+
+%%%
+% TODO commands
+%%%
+\newcommand{\itodo}[1]{\todo[inline]{#1}}
+\newcommand{\funfact}[1]{\todo[color=green!20]{#1}}
+\newcommand{\ifunfact}[1]{\todo[inlince,color=green!20]{#1}} 

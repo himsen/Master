@@ -1,0 +1,55 @@
+%\documentclass[a4paper,11pt,twoside,oneside,final,article]{memoir}
+%\include{Preamble}
+%\begin{document}
+
+  % forside centreret i forhold til papiret ikke i forhold til
+  % marginerne
+  \calccentering{\unitlength}
+  \begin{adjustwidth*}{\unitlength}{-\unitlength}
+    \vspace*{2cm}
+    \centering
+    \scshape
+    
+    {\huge
+    On a Canonical and Systematic Approach to Cryptographic Subversion \\
+    \vspace*{\onelineskip} 
+    % Hvordan fanden gør man det her bare ved at ændre linieafstanden??
+    %\Large{\textit{Elliptic curve factorization using Edwards curves}}
+    }
+    
+    \vspace*{4\onelineskip}
+    
+	\includegraphics[width=7cm,height=7cm]{segla1b}    
+	
+	\vspace*{3\onelineskip}
+    
+    {\large
+    \linespread{1.4}\selectfont
+    
+    Master of Science\\
+    in\\
+    Mathematics \\
+    \vspace{10mm}
+        Torben Brandt Hansen, 20091714 \\
+    	\today \\
+    	Supervisors: Claudio Orlandi and Johan P. Hansen \\
+ 	}
+    \begin{figure}[b]
+		\centering
+		\includegraphics[width=\textwidth]{alt-logo-t-1a171b-en}
+	\end{figure}
+    \strut\vfill
+  \end{adjustwidth*}
+  \newpage
+  \thispagestyle{empty} % intet sidehoved/fod
+  \strut\vfill % smid tekst helt ned i bunden
+  \begin{flushleft} % ingen orddeling
+  	English title:  On a canonical and systematic approach to cryptographic subversion \\
+  	Danish title: En kanonisk og systematisk tilgang til konstruktion af kryptografiske bagdøre \\
+  	\vspace{5mm}
+    Copyright \copyright\ 2015 Torben Brandt Hansen \\
+    \vspace{5mm}
+    Typeset using \LaTeX\ and the memoir document class.\\
+   % Graphics made using tikZ.\fxnote{Do we have any graphics...?} \\
+  \end{flushleft}
+%\end{document}

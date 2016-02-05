@@ -1,0 +1,110 @@
+\chapter{Introduction}
+
+The use of cryptographic algorithms as black box devices/software is a common practice. Internet browsers, mobile phones and computers in general all use cryptography in a way that is hidden to the user. That is, the implementation is trusted to behave as specified. For tamper-proof devices such as HSMs it is even impossible to scrutinise the code and the inner workings of the device. This prevents the discovery of potential malicious content embedded in the black box device. The norm among cryptographers is to assume that such malicious behaviour never happens. This assumption is potentially dangerous. Specifically because it is often the case that e.g. crucial cryptographic key management functions are implemented in hardware and companies produce commercial software implementations of cryptographic systems with strictly proprietary source code. In our modern era, billions of people implicitly trust cryptographic implementations: when browsing on secure websites or paying with a credit card in the local store. Nation wide PKI systems has been set up in many countries (that the population must trust in their day to day life). Systems such as NemID \cite{NemID}, the National Danish PKI, require users to trust software from a third party provider and works as a trust anchor for the population towards trusting digital communication with public institutions, banks etc. Only very IT inclined users has the possibility to inspect this implementation, which is heavily obfuscated \cite{Obfuscated} due to proprietary  concerns. For less inclined users this software is effectively a black-box. 
+
+In light of the recent revelations by Edward Snowden \cite{BBG,PLS} it is clear that powerful actors will go to remarkable lengths in terms of both morale and finance, to obtain secret information. The National Security Agency (NSA) has for example (allegedly) tampered with public standards \cite{Gre}, a tampering that allows practical exploitation \cite{Bernstein2014}. NSA even went so far as intercepting hardware deliveries to insert back doors before they reached the intended customer \cite{Gre}. These kind of adversaries with almost unlimited resources and determination has lately obtained their own name in the security industry: Advanced Persistent Threats (APTs). They are believed to impose significant threats against financial and physical infrastructures as well as human rights. 
+
+The sheer complexity of modern cryptographic implementations today pose a serious risk, leaving many users vulnerable to simple but devastating attacks \cite{LHA,CVE1,CVE2,CVE3}. The extreme complexity makes it a very difficult task for experts, and in turn an impossible task for users, to detect anomalies and vulnerabilities in hardware and software. Therefore, deliberately inserted back doors in software or hardware is extremely hard to detect. Competitions have been created \cite{UCC}, which paints a clear picture on this particular matter. 
+
+The current state of research into cryptographic subversions is sparse and has only recently been kick-started \cite{DBLP:secSym}. In light of this and facing the reality of real world subversion attacks, we ask the following important question: \emph{Which schemes are susceptible to subversion attacks?} Reading this thesis gives the incomplete answer: \emph{Many!} \\
+
+\noindent\textbf{Prior work} 
+
+The study of cryptographic subversion was initiated by Simmons \cite{sim85, sim94} who defined the notation of a subliminal channel. Simmons phrase his work as a story involving two prisoners, Alice and Bob, and a warden. It is the goal of Alice and Bob to communicate in a secret way while it is the wardens job to prevent this communication. A long series of work followed this general theme \cite{DBLP:conf/crypto/Desmedt88,DBLP:conf/ih/BurmesterDISSY96,DBLP:conf/eurocrypt/BlazeBS98,BD91}. In the late 90s Young and Yung elaborated on this work and began a line of research involving among other topics kleptography \cite{DBLP:conf/crypto/YoungY96,DBLP:conf/eurocrypt/YoungY97,DBLP:conf/ches/YoungY01,DBLP:conf/crypto/YoungY97}. Young and Yung considered cryptographic algorithms in which they embed a public key but kept the private key for themselves. Using this model they were able to construct schemes that leaks information subliminally. Their model of using asymmetric keys is similar to ours: the compromised implementation carries the attacker's public key, but a private key is needed to read the subliminal channel. 
+
+In the realm of NSA, new work has been surfacing that tries to address the challenge of mass surveillance in a cryptographic way. In 2014 Bellare, Paterson and Rogaway \cite{DBLP:secSym} presented a new and rigorous approach to cryptographic subversion. They define the notion of an algorithm-substitution attack (ASA) and observe that modern standards for symmetric encryption crucially rely on sender-chosen randomness to attain acceptable security levels. Since implementations do not have a way to verify the sender-chosen randomness it enables a communication channel, which can be used to leak secret information. Our subversion-definitions mainly arise from ideas of this work. Recent papers has copied the ideas of Bellare, Paterson and Rogaway, and define similar notions for other areas of cryptography \cite{cryptoeprint:2015:683,cryptoeprint:2015:517,DBLP:conf/eurocrypt/DodisGGJR15}. \\
+
+\noindent\textbf{Cryptographic game} 
+
+The notion of security for a scheme is often modelled by a game. Familiar notions such as $\CPA$ security of a symmetric (or asymmetric) encryption scheme and $\DDH$ hardness relative to a group are fundamental in cryptography. They can all be formulated as a cryptographic game in which their notion of security is quantified. There are interesting connections between $\CPA$ and $\DDH$: to prove $\CPA$ security for certain schemes e.g. the $\elGamal$ public-key encryption scheme, one needs to do a reduction to $\DDH$ hardness of the underlying group instance. In other words, the game defining $\CPA$ security relates to the game defining $\DDH$ hardness. In this sense the $\DDH$ hardness game is canonical: a basic game/assumption that can be used to construct lower-level schemes.
+
+The $\CPA$ security game and $\DDH$ hardness game are different in the sense that the former is an interactive game while the latter is a non-interactive game. To capture both games, we therefore need to produce two set of definitions: one for the non-interactive cryptographic games and one for the interactive cryptographic games.  In \secref{cryptographicGame} we abstract the idea of a cryptographic game and build a definitional framework where both interactive and non-interactive cryptographic game can be formulated. \\
+
+\noindent\textbf{Subversion}
+
+Cryptographic subversion is the study of subverting cryptographic algorithms. In a cryptographic subversion attack, an attacker aims to subvert an algorithm in such a way that the subversion remains unnoticed but the subverted algorithm simultaneously leaks secret information through its output. In such an attack, an attacker is in some way using cryptography against cryptography. In this respect, a cryptographic subversion is the proof that even though we can do great things with crypto, it can also prevent us from foiling certain attacks. While some cryptographers seemed to had dismissed real world subversion attacks as far-fetched, recent revelations suggest this attitude to be naive \cite{BBG}. Real world cryptographic subversion may well be going on today, possibly on a massive scale. 
+
+We wish to define cryptographic subversion with respect to a cryptographic game. This gives us some advantages over definitions appearing in prior work. On the conceptual plane it will allow us to construct what we will call \emph{canonical cryptographic subversions} (see next paragraph). On the technical level it gives us the possibility of defining the properties of a subversion in a coherent and compact manner. Hopefully this will help emphasise the actual properties of a subversion and the properties we really want. 
+
+First task is to define big brother $\bb$. Big brother is the modifier and thus the entity responsible of constructing the subversion. A big brother is defined with respect to a specific cryptographic game and to be successful in constructing the subversion $\bb$ must satisfy three requirements: recoverability, undetectability and preservability. First requirement secures that $\bb$ can recover the leaked information; second requirement makes sure that $\bb$ can not be detected; last requirement ensures that the subverted scheme satisfy at least the same notion of security as the non-subverted scheme. In \secref{subversion} it is proven that the last requirement is actually redundant. 
+
+Previous work has only defined cryptographic subversions of one strength. We expand this and define both a weak and a strong form of cryptographic subversion. This makes it possible to deeper explore the state of possible subversions. \\
+
+\noindent\textbf{Canonical subversion}
+
+In this thesis we will develop and explore a new approach to cryptographic subversion. Recent work \cite{cryptoeprint:2015:517,DBLP:conf/eurocrypt/DodisGGJR15,DBLP:secSym,cryptoeprint:2015:683} has dealt with cryptographic subversions on a low-level by building their own separate definitional frameworks. As was mentioned above, cryptographic schemes are often proven secure with respect to some security game by constructing a reduction to an underlying (canonical) hardness assumption. We want to carry the idea of canonical assumptions for proving security of schemes to the topic of cryptographic subversion.
+Our new approach is to define and investigate a new technique, canonical cryptographic subversion, which can be used to easily construct (and formally prove success of) subversions of low-level schemes e.g. construct a subversion for $\CDH$ that can be used to subvert $\elGamal$.
+
+There is a hierarchy in the usual hardness assumptions in the sense that $\DDH$ hardness implies $\CDH$ hardness, which in turn implies $\DL$ hardness. It turns out that there also exists a hierarchy in canonical cryptographic subversions but turned up-side-down: a subversion of $\CDH$ implies a subversion of $\DDH$. Therefore, it is a stronger requirement to assume that $\CDH$ can be subverted. In contrast it is a stronger assumption to assume $\DDH$ is hard than $\CDH$ is hard. We present (in the Random Oracle Model) two canonical cryptographic subversions in \chapref{hardnessAssumptionSubversion} \\
+
+\noindent\textbf{Systematic approach}
+
+A secondary aim of this thesis is to propose a systematic approach to the study of cryptographic subversion. In particular, we propose a common body of language to be used when describing subversions, defined in the context of cryptographic games. In addition this provides a common set of definitions that completely characterise the properties that are desired for a successful subversion (these were presented above). In \chapref{symmetricSubversion} it is shown that our framework indeed enables the recovery of previous results. Namely, we recover a result from \cite{DBLP:secSym} that shows that all $\iv$-surfacing, probabilistic and stateless symmetric encryption schemes are subversion prone. In \chapref{publicKeyEncryptionSubversion} a result from \cite{DBLP:conf/crypto/YoungY96} is recovered that highlight the subvertability of the $\elGamal$ public-key encryption scheme but constructed by making use of a canonical cryptographic subversion.
+
+Furthermore our approach also provides a systematic method to analyse cryptographic subversions. Out definitions include the concept of a parameter function together, which together with the definition of two different subversions strength gives a degree of agility that can be used to analyse different scenarios and (hopefully) yield greater insight into the state of cryptographic subversion. \\
+
+\noindent\textbf{Contributions}
+
+We propose a new framework to the study of cryptographic subversion that encapsulate previous work into a combined set of definitions. Moreover, we construct, in the Random Oracle Model, canonical subversions, that are subversions of hardness assumptions. These subversions are used to construct a subversion of the $\elGamal$ public-key encryption scheme. Figure \ref{table} below contains a schematic view of the subversions presented in this thesis. 
+
+\begin{figure}[ht]
+\begin{center}
+\begin{tabular}{|c|c|c|c|}
+\hline 
+\rule[-1ex]{0pt}{2.5ex}  & $\weakly$ subversion & $\strongly$ subversion & ROM \\ 
+\hline 
+\rule[-1ex]{0pt}{2.5ex} \textbf{Hardness assumption}  \\ 
+\hline 
+\rule[-1ex]{0pt}{2.5ex} $\CDH$ & \textcolor{green}{\cmark} & \textcolor{green}{\cmark} & \textcolor{green}{\cmark} \\ 
+\hline 
+\rule[-1ex]{0pt}{2.5ex} $\DDH$ & \textcolor{green}{\cmark} & \textcolor{green}{\cmark} & \textcolor{green}{\cmark} \\ 
+\hline 
+\rule[-1ex]{0pt}{2.5ex} \textbf{Public-key encryption}   \\ 
+\hline 
+\rule[-1ex]{0pt}{2.5ex} $\elGamal$ & \textcolor{green}{\cmark} & \textcolor{green}{\cmark} & \textcolor{green}{\cmark} \\ 
+\hline 
+\rule[-1ex]{0pt}{2.5ex} \textbf{Symmetric encryption} \\ 
+\hline 
+\rule[-1ex]{0pt}{2.5ex} $\iv$-surfacing \& $\probabilistic$ \& $\stateless$ & \textcolor{green}{\cmark} & \textcolor{green}{\cmark} & \textcolor{red}{\xmark}\\ 
+\hline 
+\end{tabular}
+\end{center}
+\caption{Overview of hardness assumptions and schemes that are subverted in this thesis.}
+\label{table}
+\end{figure}
+
+The table shows positive results with respect to big brother. A conclusion on the basis of this is that a big brother can achieve mass surveillance if there are any green check marks. ROM stands for \emph{Random Oracle Model}, which means that the construction of the subversion utilises the Random Oracle Model. 
+
+By establishing a common definitional framework we provide a set of definitions to unify the theory of cryptographic subversion where previous subversions can also be formulated. As a side effect, it brings old work \cite{DBLP:conf/crypto/YoungY96} into a rigorous condition that is on par with nowadays cryptography standards. 
+
+We take an overly negative approach, in the sense that we are not much interested in constructing schemes that are subversion resistant but only to show that a subset of \emph{known} schemes are vulnerable to subversion attacks. Even though we do not provide constructions of schemes secure against subversion attacks, we believe that mapping the field of possible subversions in a consistent and rigorous manner using the same body of language, aids the awareness of the dangers that such attacks impose and thereby paying the way for further work on subversion resistant schemes.\\
+
+\noindent\textbf{Summary}\\
+
+\noindent\emph{Chapter 2} covers a number of preliminaries, which will be needed for later chapters. We fix the common notation and conventions that is used throughout. The notion of pseudo-random functions and block ciphers are defined. We define and discuss indistinguishability of probability ensembles. The different hardness assumptions needed in the sequel are presented and their connections are discussed and proved. A general definition of public-key encryption and symmetric encryption is provided together with their security definitions. Last, we discuss the Random Oracle Model.  \\
+
+\noindent\emph{Chapter 3} begins by discussing the requirements of a cryptographic game as well as motivations. We then introduce the definition of a non-interactive cryptographic game and an interactive cryptographic game.\\
+
+\noindent\emph{Chapter 4} first presents the definition of a big brother, which leads to the introduction of the definition of a subversion of a non-interactive cryptographic game and a subversion of an interactive cryptographic game. For each notion, results on general properties are stated and proved. In addition, several examples are presented that elaborate on the definitions. \\
+
+\noindent\emph{Chapter 5} presents two interactive cryptographic games in the shape of the $\CDH$ and $\DDH$ hardness assumption. A strong subversion of both games are constructed in the Random Oracle Model. In addition, we discuss the relation between the two subversions. \\
+
+\noindent\emph{Chapter 6} use the subversions presented in \chapref{hardnessAssumptionSubversion} to subvert the $\elGamal$ public-key encryption scheme. \\
+
+\noindent\emph{Chapter 7} first defines a symmetric big brother. The chapter then continues to state and prove a result from \cite{DBLP:secSym} in our new framework.  
+
+\begin{flushright}
+Torben Hansen, \today.
+\end{flushright}
+
+\newpage
+\vphantom{bla}
+\vfill
+\begin{citat}{Edward Snowden(1983--) 
+}
+I do not want to live in a world where everything I do and say is recorded. \\That is
+not something I am willing to support or live under.  
+\end{citat}
+
+
+
